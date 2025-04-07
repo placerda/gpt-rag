@@ -20,4 +20,4 @@ if (Test-Path -Path ".\.azure\gpt-rag-frontend") {
 }
 
 # Clone the repository into the .azure folder
-git clone --branch workshop --depth 1 https://github.com/Azure/gpt-rag-frontend ./.azure/gpt-rag-frontend
+git clone --branch workshop --depth 1 https://github.com/Azure/gpt-rag-ui ./.azure/gpt-rag-frontend

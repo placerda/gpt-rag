@@ -22,4 +22,4 @@ if [ -d ./.azure/gpt-rag-frontend ]; then
 fi
 
 # Clone the repository into the .azure folder
-git clone --branch workshop --depth 1 https://github.com/Azure/gpt-rag-frontend ./.azure/gpt-rag-frontend
+git clone --branch workshop --depth 1 https://github.com/Azure/gpt-rag-ui ./.azure/gpt-rag-frontend

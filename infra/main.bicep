@@ -380,7 +380,6 @@ var _searchAnalyzerName = !empty(searchAnalyzerName) ? searchAnalyzerName : 'sta
 param useSemanticReranking bool = false
 var _useSemanticReranking = useSemanticReranking != null ? useSemanticReranking : false
 
-// Temporary for TechConnect
 var _searchServiceSkuName = _networkIsolation?'standard2':'standard'
 
 @description('Search index name.')
@@ -533,6 +532,7 @@ param bastionKvName string = ''
 var _bastionKvName = !empty(bastionKvName) ? bastionKvName : 'bastionkv-${resourceToken}'
 
 var _orchestratorEndpoint = 'https://${_orchestratorFunctionAppName}.azurewebsites.net/api/orc'
+var _orchestratorStreamingEndpoint = 'https://${_orchestratorFunctionAppName}.azurewebsites.net/api/orcstream'
 
 /////////////////////////////////////////////////////////////////////////////
 // TEMPLATE MODULES
@@ -1039,7 +1039,7 @@ module frontEnd  'core/host/appservice.bicep' = {
     networkIsolation: (_networkIsolation && !_vnetReuse)
     vnetName: (_networkIsolation && !_vnetReuse)?vnet.outputs.name:''
     subnetId: (_networkIsolation && !_vnetReuse)?vnet.outputs.appIntSubId:''
-    appCommandLine: 'python ./app.py'
+    appCommandLine:'python -m uvicorn main:app --host 0.0.0.0 --port $\${PORT:-8000}'
     location: location
     tags: union(tags, { 'azd-service-name': 'frontend' })
     appServicePlanId: appServicePlan.outputs.id
@@ -1071,6 +1071,10 @@ module frontEnd  'core/host/appservice.bicep' = {
         value: _orchestratorEndpoint
       }
       {
+        name: 'ORCHESTRATOR_STREAM_ENDPOINT'
+        value: _orchestratorStreamingEndpoint
+      }      
+      {
         name: 'AZURE_SUBSCRIPTION_ID'
         value: subscription().subscriptionId
       }
@@ -1093,7 +1097,7 @@ module frontEnd  'core/host/appservice.bicep' = {
       {
         name: 'STORAGE_ACCOUNT'
         value: _storageAccountName
-      } 
+      }
       {
         name: 'LOGLEVEL'
         value: 'INFO'
