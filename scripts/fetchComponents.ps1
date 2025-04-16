@@ -3,7 +3,7 @@ if (Test-Path -Path ".\.azure\gpt-rag-ingestion") {
     Remove-Item -Path ".\.azure\gpt-rag-ingestion" -Recurse -Force
 }
 
-# Clone the repository into the .azure folder
+# Clone the gpt-rag-ingestion repository into the .azure folder
 git clone https://github.com/Azure/gpt-rag-ingestion .\.azure\gpt-rag-ingestion
 
 # Delete the gpt-rag-orchestrator folder from .azure if it exists
@@ -11,13 +11,13 @@ if (Test-Path -Path ".\.azure\gpt-rag-orchestrator") {
     Remove-Item -Path ".\.azure\gpt-rag-orchestrator" -Recurse -Force
 }
 
-# Clone the repository into the .azure folder
-git clone https://github.com/Azure/gpt-rag-agentic .\.azure\gpt-rag-orchestrator
+# Clone the gpt-rag-agentic repository from the 'semantic-kernel' branch into the .azure folder
+git clone --branch semantic-kernel https://github.com/placerda/gpt-rag-agentic .\.azure\gpt-rag-orchestrator
 
 # Delete the gpt-rag-frontend folder from .azure if it exists
 if (Test-Path -Path ".\.azure\gpt-rag-frontend") {
     Remove-Item -Path ".\.azure\gpt-rag-frontend" -Recurse -Force
 }
 
-# Clone the repository into the .azure folder
+# Clone the gpt-rag-ui repository into the .azure folder
 git clone https://github.com/Azure/gpt-rag-ui .\.azure\gpt-rag-frontend

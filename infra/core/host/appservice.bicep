@@ -1,139 +1,63 @@
+@description('Creates an Azure App Service in an existing App Service Plan.')
 param name string
 param location string = resourceGroup().location
 param tags object = {}
 
-// Reference Properties
+@description('Startup command for the app (e.g., uvicorn line for FastAPI)')
+param appCommandLine string = ''
+
+@description('Set to true to enable build during deployment (SCM_DO_BUILD_DURING_DEPLOYMENT)')
+param scmDoBuildDuringDeployment bool = true
+
+
+@description('Application Insights resource name (optional).')
 param applicationInsightsName string = ''
-param applicationInsightsResourceGroupName string = ''
+
+@description('The App Service Plan ID for the App Service.')
 param appServicePlanId string
 
-// Runtime Properties
-@allowed([
-  'dotnet', 'dotnetcore', 'dotnet-isolated', 'node', 'python', 'java', 'powershell', 'custom'
-])
+@description('Key Vault name (optional).')
+param keyVaultName string = ''
+
+@description('Runtime name (e.g., python)')
 param runtimeName string
-param runtimeNameAndVersion string = '${runtimeName}|${runtimeVersion}'
+@description('Runtime version (e.g., 3.12)')
 param runtimeVersion string
+var runtimeNameAndVersion = '${runtimeName}|${runtimeVersion}'
 
-// Microsoft.Web/sites Properties
-param kind string = 'app,linux'
+@description('Custom app settings for the App Service.')
+@secure()
+param appSettings object = {}
 
-// Microsoft.Web/sites/config
+@description('Allowed origins for CORS.')
 param allowedOrigins array = []
-param alwaysOn bool = true
-param appCommandLine string = ''
-param appSettings array = []
-param clientAffinityEnabled bool = false
-param enableOryxBuild bool = contains(kind, 'linux')
-param functionAppScaleLimit int = -1
-param linuxFxVersion string = runtimeNameAndVersion
-param minimumElasticInstanceCount int = -1
-param numberOfWorkers int = -1
-param scmDoBuildDuringDeployment bool = true
-param use32BitWorkerProcess bool = false
-param ftpsState string = 'FtpsOnly'
-param healthCheckPath string = ''
-param basicPublishingCredentials bool = false
-param networkIsolation bool
-param vnetName string = ''
-param subnetId string = ''
 
-param appServiceReuse bool
-param deployAppService bool = true
-
-param existingAppServiceResourceGroupName string    
-
-resource existingAppService 'Microsoft.Web/sites@2022-09-01' existing = if (appServiceReuse && deployAppService) {
-  scope: resourceGroup(existingAppServiceResourceGroupName)
-  name: name
-}
-
-resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = if (!empty(applicationInsightsName)) {
-  scope: resourceGroup(applicationInsightsResourceGroupName)
-  name: applicationInsightsName
-}
-
-resource newAppService 'Microsoft.Web/sites@2022-09-01' = if (!appServiceReuse && deployAppService) {
+resource appService 'Microsoft.Web/sites@2022-03-01' = {
   name: name
   location: location
   tags: tags
-  kind: kind
-  properties: {
-    serverFarmId: appServicePlanId
-    virtualNetworkSubnetId: networkIsolation?subnetId:null
-    vnetRouteAllEnabled: true
-    siteConfig: {
-      vnetName: networkIsolation?vnetName:null
-      linuxFxVersion: linuxFxVersion
-      alwaysOn: alwaysOn
-      ftpsState: ftpsState
-      minTlsVersion: '1.2'
-      appCommandLine: appCommandLine
-      numberOfWorkers: numberOfWorkers != -1 ? numberOfWorkers : null
-      minimumElasticInstanceCount: minimumElasticInstanceCount != -1 ? minimumElasticInstanceCount : null
-      use32BitWorkerProcess: use32BitWorkerProcess
-      functionAppScaleLimit: functionAppScaleLimit != -1 ? functionAppScaleLimit : null
-      healthCheckPath: healthCheckPath
-      appSettings: concat(
-        appSettings,
-        empty(applicationInsightsName) ? [] : [
-          {
-            name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-            value: applicationInsights.properties.ConnectionString
-          }
-        ],
-        [
-          {
-            name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-            value: string(scmDoBuildDuringDeployment)
-          }
-          {
-            name: 'ENABLE_ORYX_BUILD'
-            value: string(enableOryxBuild)
-          }
-          {
-            name: 'WEBSITE_HTTPLOGGING_RETENTION_DAYS'
-            value: '1'
-          }         
-        ]
-      )    
-      cors: {
-        allowedOrigins: union([ 'https://portal.azure.com', 'https://ms.portal.azure.com' ], allowedOrigins)
-      }
-    }
-    clientAffinityEnabled: clientAffinityEnabled
-    httpsOnly: true
-  }
+  kind: 'app,linux'
   identity: {
     type: 'SystemAssigned'
   }
-  resource configLogs 'config' = {
-    name: 'logs'
-    properties: {
-      applicationLogs: { fileSystem: { level: 'Verbose' } }
-      detailedErrorMessages: { enabled: true }
-      failedRequestsTracing: { enabled: true }
-      httpLogs: { fileSystem: { enabled: true, retentionInDays: 1, retentionInMb: 35 } }
+  properties: {
+    serverFarmId: appServicePlanId
+    siteConfig: {
+      linuxFxVersion: runtimeNameAndVersion
+      alwaysOn: true
+      appSettings: union(appSettings, {
+        'SCM_DO_BUILD_DURING_DEPLOYMENT': string(scmDoBuildDuringDeployment)
+      })
+      cors: {
+        allowedOrigins: allowedOrigins
+      }
+      appCommandLine: appCommandLine
     }
-  }
-
-  resource basicPublishingCredentialsPoliciesFtp 'basicPublishingCredentialsPolicies' = {
-    name: 'ftp'
-    properties: {
-      allow: basicPublishingCredentials
-    }
-  }
-
-  resource basicPublishingCredentialsPoliciesScm 'basicPublishingCredentialsPolicies' = {
-    name: 'scm'
-    properties: {
-      allow: basicPublishingCredentials
-    }
+    httpsOnly: true
   }
 }
 
-output identityPrincipalId string = !deployAppService ? '' : appServiceReuse ? existingAppService.identity.principalId : newAppService.identity.principalId
-output name string = !deployAppService ? '' : appServiceReuse ? existingAppService.name : newAppService.name
-output uri string = !deployAppService ? '' : 'https://${appServiceReuse ? existingAppService.properties.defaultHostName : newAppService.properties.defaultHostName }'
-output id string = !deployAppService ? '' : appServiceReuse ? existingAppService.id : newAppService.id
-// output key string = listKeys(appService.id, appService.apiVersion).default
+output id string = appService.id
+output name string = appService.name
+output uri string = 'https://${appService.properties.defaultHostName}'
+output identityPrincipalId string = appService.identity.principalId

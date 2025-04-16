@@ -5,26 +5,25 @@ metadata:
   template: azure-gpt-rag
 services:
   dataIngest:
-    # project is temporally pulled fro its repo during deployment.
+    # Serviço de Ingestão de Dados é implementado como Function App.
     project: ./.azure/gpt-rag-ingestion
     language: python
     host: function
     hooks:
       postdeploy:
         posix:
-          # this path is relative to ./.azure/gpt-rag-ingestion
           run: scripts/postdeploy.sh
           interactive: true
         windows:
-          # this path is relative to ./.azure/gpt-rag-ingestion
           run: scripts/postdeploy.ps1
           interactive: true
   orchestrator:
+    # Serviço do Orquestrador implementado como Container App.
     project: ./.azure/gpt-rag-orchestrator
     language: python
-    host: function
+    host: containerapp
   frontend:
-    # backend is python and frontend is Vite app. The frontend is built with Vite settings to output into the backend's static folder.
+    # Serviço da Interface implementado como App Service.
     project: ./.azure/gpt-rag-frontend
     language: python
     host: appservice
@@ -36,26 +35,25 @@ hooks:
       interactive: false
     windows:
       run: scripts/fetchComponents.ps1
-      interactive: false 
+      interactive: false
   preprovision:
     posix:
-      shell: sh    
+      shell: sh
       run: scripts/preprovision.sh
       interactive: true
     windows:
-      shell: pwsh    
+      shell: pwsh
       run: scripts/preprovision.ps1
       interactive: true
   postprovision:
     posix:
-      shell: sh    
+      shell: sh
       run: scripts/postprovision.sh
       interactive: true
     windows:
-      shell: pwsh    
+      shell: pwsh
       run: scripts/postprovision.ps1
       interactive: true
-  # Components are pulled from their own repo for deployment but are not persisted to this repo.
   predeploy:
     posix:
       shell: sh
@@ -67,10 +65,10 @@ hooks:
       interactive: true
   postdeploy:
     posix:
-      shell: sh    
+      shell: sh
       run: scripts/cleanComponents.sh
       interactive: false
     windows:
-      shell: pwsh    
+      shell: pwsh
       run: scripts/cleanComponents.ps1
       interactive: false

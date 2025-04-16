@@ -1,28 +1,32 @@
+@description('Creates an Azure Cognitive Services instance for AI services.')
 param name string
 param location string = resourceGroup().location
 param tags object = {}
-param aiServicesReuse bool
-param existingAiServicesResourceGroupName string
 
-param aiServicesDeploy bool = true
-
-param secretsNames object = {}
-param keyVaultName string
-
+@description('Custom subdomain name used to access the API. Defaults to the value of the name parameter.')
 param customSubDomainName string = name
+@description('Disable local authentication?')
+param disableLocalAuth bool = false
+@description('Array of model deployments for AI services.')
 param deployments array = []
+@description('The kind of Cognitive Services account to create. Typically "OpenAI" or "AIServices".')
 param kind string = 'OpenAI'
+@allowed([ 'Enabled', 'Disabled' ])
 param publicNetworkAccess string = 'Enabled'
+@description('SKU for the Cognitive Services account.')
 param sku object = {
   name: 'S0'
 }
-
-resource existingAccount 'Microsoft.CognitiveServices/accounts@2024-10-01' existing  = if (aiServicesReuse && aiServicesDeploy) {
-  scope: resourceGroup(existingAiServicesResourceGroupName)
-  name: name
+@description('Allowed IP rules for network ACLs (optional).')
+param allowedIpRules array = []
+var networkAcls = empty(allowedIpRules) ? {
+  defaultAction: 'Allow'
+} : {
+  ipRules: allowedIpRules
+  defaultAction: 'Deny'
 }
 
-resource newAccount 'Microsoft.CognitiveServices/accounts@2024-10-01' = if (!aiServicesReuse && aiServicesDeploy) {
+resource cognitiveAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: name
   location: location
   tags: tags
@@ -30,43 +34,27 @@ resource newAccount 'Microsoft.CognitiveServices/accounts@2024-10-01' = if (!aiS
   properties: {
     customSubDomainName: customSubDomainName
     publicNetworkAccess: publicNetworkAccess
+    networkAcls: networkAcls
+    disableLocalAuth: disableLocalAuth
   }
   sku: sku
 }
 
 @batchSize(1)
-resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = [for deployment in deployments: if (!aiServicesReuse && aiServicesDeploy) {
-  parent: newAccount
-  name: deployment.name
+resource deploymentResources 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = [for dep in deployments: {
+  parent: cognitiveAccount
+  name: dep.name
   properties: {
-    model: deployment.model
-    raiPolicyName: contains(deployment, 'raiPolicyName') ? deployment.raiPolicyName : null
+    model: dep.model
+    raiPolicyName: contains(dep, 'raiPolicyName') ? dep.raiPolicyName : null
   }
-  sku: contains(deployment, 'sku') ? deployment.sku : {
+  sku: contains(dep, 'sku') ? dep.sku : {
     name: 'Standard'
-    capacity: 40
+    capacity: 20
   }
 }]
 
-resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
-  name: keyVaultName
-}
-
-resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2022-07-01' =  [for secretName in items(secretsNames): {
-  name: secretName.value
-  tags: tags
-  parent: keyVault
-  properties: {
-    attributes: {
-      enabled: true
-      exp: 0
-      nbf: 0
-    }
-    contentType: 'string'
-    value:  aiServicesReuse ? existingAccount.listKeys().key1 : newAccount.listKeys().key1
-  }
-}]
-
-output name string = !aiServicesDeploy ? '' : aiServicesReuse? existingAccount.name : newAccount.name
-output id string = !aiServicesDeploy ? '' : aiServicesReuse? existingAccount.id : newAccount.id
-output endpoint string = !aiServicesDeploy ? '' : aiServicesReuse? existingAccount.properties.endpoint : newAccount.properties.endpoint
+output endpoint string = cognitiveAccount.properties.endpoint
+output endpoints object = cognitiveAccount.properties.endpoints
+output id string = cognitiveAccount.id
+output name string = cognitiveAccount.name

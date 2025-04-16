@@ -1,15 +1,13 @@
-param permissions object = { secrets: [ 'get', 'list' ] }
-// param permissions object = { secrets: [ 'get', 'list', 'set', 'delete' ] }
-param principalId string
-param resourceName string
+metadata description = 'Assigns an Azure Key Vault access policy.'
+param name string = 'add'
 
-resource resource 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
-  name: resourceName
-}
+param keyVaultName string
+param permissions object = { secrets: [ 'get', 'list' ] }
+param principalId string
 
 resource keyVaultAccessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2022-07-01' = {
-  parent: resource
-  name: 'add'
+  parent: keyVault
+  name: name
   properties: {
     accessPolicies: [ {
         objectId: principalId
@@ -17,4 +15,8 @@ resource keyVaultAccessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2022-0
         permissions: permissions
       } ]
   }
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
+  name: keyVaultName
 }
