@@ -1,19 +1,6 @@
-// main.bicep - Deployment Template (Resource Group Scope)
-// This template provisions the following components:
-// • An Application Configuration store (centralizes properties for Function and App Services)
-// • A Container Registry (to store container images)
-// • An AI Foundry Environment – comprising an AI project and hub – for managing AI services
-//   (the hub can be newly created or reused if desired)
-// • A Data Ingest Function App (the only function app deployed)
-// • A Cosmos DB account and database (with two containers)
-// • A Key Vault (for securing secrets)
-// • Application Insights (for monitoring)
-// • An App Service Plan (for hosting the Front‑end App Service)
-// • A Front‑end App Service (hosting your UI)
-// • A Storage Account (for deployment packages)
-// • AI Services (Cognitive Services), an Azure OpenAI resource, and an AI Search Service
-// • An Orchestrator Container App (which pulls its image from the Container Registry)
-// Note: Networking (vNETs, private endpoints) and the legacy orchestrator function app are omitted.
+// main.bicep - Deployment Template (Resource Group Scope) using Azure Verified Modules (AVM)
+// Reference: https://azure.github.io/Azure-Verified-Modules/indexes/bicep/bicep-resource-modules/
+
 
 targetScope = 'resourceGroup'
 
@@ -23,611 +10,739 @@ targetScope = 'resourceGroup'
 
 @description('Environment name used for tagging resources.')
 param environmentName string = 'dev'
-
 @description('Primary deployment location.')
 param location string 
-
 @description('Key-value pairs of tags to assign to all resources.')
 param deploymentTags object = {}
-
-@description('Principal ID used to assign access roles (set by azd or manually).')
+@description('Principal ID used to assign access roles.')
 param principalId string = ''
 
-// Parameters for AI Foundry Environment
-@description('Existing AI project connection string; leave empty to deploy a new AI environment.')
+@description('Existing AI project connection string; leave empty to deploy new AI.')
 param aiExistingProjectConnectionString string = ''
-
-@description('Azure AI Foundry Hub resource name. If omitted, a new hub name is generated.')
-param aiHubName string = ''
-
-@description('Azure AI Foundry project name. If omitted, a new project name is generated.')
-param aiProjectName string = ''
-
 @description('Reuse an existing AI Foundry Hub?')
 param foundryHubReuse bool = false
-
-@description('Existing Foundry Hub resource group (if reusing).')
+@description('Existing Foundry Hub resource group name (if reusing).')
 param existingFoundryHubResourceGroupName string = ''
-
 @description('Existing Foundry Hub name (if reusing).')
 param existingFoundryHubName string = ''
 
-@description('The AI Services connection name. If omitted, a default value will be used.')
-param aiServicesConnectionName string = ''
-
-@description('The AI Services content safety connection name. If omitted, a default value will be used.')
-param aiServicesContentSafetyConnectionName string = ''
-
-@description('The Azure Search connection name. If omitted, a default value will be used.')
-param searchConnectionName string = ''
-
-@description('The search index name.')
-param aiSearchIndexName string = 'ragindex'
-
-@description('The log analytics workspace name for AI monitoring. If omitted, it will be generated.')
-param logAnalyticsWorkspaceName string = ''
-
-// Reuse configuration parameter
-@description('Azure reuse configuration.')
-param azureReuseConfig object = {}
-
-@description('Cosmos DB configuration')
-param azureDbConfig object = {}
-
-@description('Python runtime version for Function Apps.')
-param funcAppRuntimeVersion string = '3.11'
-@description('Python runtime version for App Services.')
-param appServiceRuntimeVersion string = '3.12'
-
-// Naming parameters (optional overrides)
-@description('Application Configuration store name. Leave empty to derive from resource token.')
-param appConfigName string = ''
-@description('Container Registry name. Leave empty to derive from resource token.')
-param containerRegistryName string = ''
-@description('Data Ingest Function App name. Leave empty to derive from resource token.')
-param dataIngestFunctionAppName string = ''
-@description('Key Vault name. Leave empty to derive from resource token.')
-param keyVaultName string = ''
-@description('Application Insights name. Leave empty to derive from resource token.')
-param appInsightsName string = ''
-@description('App Service Plan name. Leave empty to derive from resource token.')
-param appServicePlanName string = ''
-@description('Front-End App Service name. Leave empty to derive from resource token.')
-param frontEndAppServiceName string = ''
-@description('Storage Account name. Leave empty to derive from resource token.')
-param storageAccountName string = ''
-@description('AI Services name. Leave empty to derive from resource token.')
+// Override names (leave empty to generate)
+param aiHubName string = ''
+param aiProjectName string = ''
 param aiServicesName string = ''
-@description('Azure OpenAI Service name. Leave empty to derive from resource token.')
-param openAiServiceName string = ''
-@description('Search Service name. Leave empty to derive from resource token.')
+param appConfigName string = ''
+param containerRegistryName string = ''
+param dataIngestFunctionAppName string = ''
+param keyVaultName string = ''
+param logAnalyticsWorkspaceName string = ''
+param appInsightsName string = ''
+param appServicePlanName string = ''
+param frontEndAppServiceName string = ''
+param aiFoundryStorageAccountName string = ''
+param functionAppStorageAccountName string = ''
+param solutionStorageAccountName string = ''
 param searchServiceName string = ''
+param provisionAPIM bool = true
+param apimResourceName string = ''
+param apimSku string = ''
+param apimSkuCount int = 1
+param apimPublisherEmail string = ''
+param apimPublisherName string = ''
+param openAIAPIName string = ''
+param openAIAPIPath string = ''
+param openAIAPIDisplayName string = ''
+param openAIAPISpecURL string = ''
+param openAISubscriptionName string = ''
+param openAISubscriptionDescription string = ''
+param dbAccountName string = ''
+param dbDatabaseName string = ''
+param conversationContainerName string = ''
+param datasourcesContainerName string = ''
+param funcAppRuntimeVersion string = ''
+param frontEndAppRuntimeVersion string = ''
+param semanticSearch string = ''
+param orchestratorContainerAppName string = ''
+param orchestratorImage string = ''
+
+
+@description('GPT tokens per minute (in thousands).')
+@minValue(1)
+@maxValue(300)
+param chatGptDeploymentCapacity      int    = 120
+
+@description('Embeddings tokens per minute (in thousands).')
+param embeddingsDeploymentCapacity   int    = 120
+
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fallback “effective” values for every string parameter, underscore‑prefixed
+// ─────────────────────────────────────────────────────────────────────────────
+var _environmentName            = empty(environmentName           ) ? 'dev'                              : environmentName
+var _location                   = empty(location                  ) ? 'eastus2'                          : location
+var _principalId                = empty(principalId               ) ? ''                                 : principalId
+var _aiExistingProjectConnectionString = empty(aiExistingProjectConnectionString) ? ''                   : aiExistingProjectConnectionString
+var _existingFoundryHubResourceGroupName = empty(existingFoundryHubResourceGroupName) ? ''             : existingFoundryHubResourceGroupName
+var _existingFoundryHubName     = empty(existingFoundryHubName    ) ? ''                                 : existingFoundryHubName
+var _aiHubName = empty(aiHubName) ? '' : aiHubName
+
+var _aiProjectName              = empty(aiProjectName             ) ? 'ai-project-${resourceToken}'      : aiProjectName
+var _aiServicesName             = empty(aiServicesName            ) ? '${abbrs.openaiServices}0-${resourceToken}'        : aiServicesName
+var _appConfigName              = empty(appConfigName             ) ? '${abbrs.appConfigurationStores}-${resourceToken}'  : appConfigName
+var _solutionStorageAccountName = empty(solutionStorageAccountName) ? '${abbrs.storageStorageAccounts}rag0${resourceToken}'   : solutionStorageAccountName
+var _containerRegistryName      = empty(containerRegistryName     ) ? '${abbrs.containerRegistries}${resourceToken}'     : containerRegistryName
+var _dataIngestFunctionAppName  = empty(dataIngestFunctionAppName ) ? '${abbrs.functionApps}-${resourceToken}'           : dataIngestFunctionAppName
+var _keyVaultName               = empty(keyVaultName              ) ? '${abbrs.keyVaultVaults}0-${resourceToken}'        : keyVaultName
+var _logAnalyticsWorkspaceName  = empty(logAnalyticsWorkspaceName ) ? '${abbrs.operationalInsightsWorkspaces}0-${resourceToken}' : logAnalyticsWorkspaceName
+var _appInsightsName            = empty(appInsightsName           ) ? '${abbrs.insightsComponents}0-${resourceToken}'    : appInsightsName
+var _appServicePlanName         = empty(appServicePlanName        ) ? '${abbrs.serverfarms}0-${resourceToken}'           : appServicePlanName
+var _frontEndAppServiceName     = empty(frontEndAppServiceName    ) ? '${abbrs.webSites}0-${resourceToken}'            : frontEndAppServiceName
+var _aiFoundryStorageAccountName = empty(aiFoundryStorageAccountName) ? '${abbrs.storageStorageAccounts}ai0${resourceToken}' : aiFoundryStorageAccountName
+var _functionAppStorageAccountName = empty(functionAppStorageAccountName) ? '${abbrs.storageStorageAccounts}ing0${resourceToken}'  : functionAppStorageAccountName
+var _searchServiceName          = empty(searchServiceName         ) ? '${abbrs.searchSearchServices}0-${resourceToken}' : searchServiceName
+
+var _openAIAPIName              = empty(openAIAPIName             ) ? 'openai'                            : openAIAPIName
+var _openAIAPIPath              = empty(openAIAPIPath             ) ? 'openai'                            : openAIAPIPath
+var _openAIAPIDisplayName       = empty(openAIAPIDisplayName      ) ? 'OpenAI'                            : openAIAPIDisplayName
+var _openAIAPISpecURL           = empty(openAIAPISpecURL          ) ? 'https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/stable/2024-02-01/inference.json' : openAIAPISpecURL
+var _openAISubscriptionName     = empty(openAISubscriptionName    ) ? 'openai-subscription'               : openAISubscriptionName
+var _openAISubscriptionDescription = empty(openAISubscriptionDescription) ? 'OpenAI Subscription'            : openAISubscriptionDescription
+
+var _apimSku                    = empty(apimSku)                   ? 'Consumption'          : apimSku
+var _apimPublisherEmail         = empty(apimPublisherEmail)        ? 'noreply@example.com'  : apimPublisherEmail
+var _apimPublisherName          = empty(apimPublisherName)         ? 'MyCompany'            : apimPublisherName
+
+var _dbAccountName              = empty(dbAccountName)            ? '${abbrs.cosmosDbAccount}0-${resourceToken}' : dbAccountName    
+var _dbDatabaseName             = empty(dbDatabaseName)           ? '${abbrs.cosmosDbDatabase}0-${resourceToken}' : dbDatabaseName
+var _conversationContainerName  = empty(conversationContainerName) ? 'conversations'       : conversationContainerName
+var _datasourcesContainerName   = empty(datasourcesContainerName)  ? 'datasources'         : datasourcesContainerName
+
+var _orchestratorContainerAppName = empty(orchestratorContainerAppName) ? 'orchestrator-${resourceToken}' : orchestratorContainerAppName
+var _orchestratorImage = empty(orchestratorImage) ? '${registry.outputs.loginServer}/orchestrator:latest' : orchestratorImage
+
+var _funcAppRuntimeVersion      = empty(funcAppRuntimeVersion     ) ? '3.11'                             : funcAppRuntimeVersion
+var _frontEndAppRuntimeVersion  = empty(frontEndAppRuntimeVersion ) ? '3.12'                             : frontEndAppRuntimeVersion
+var _semanticSearch             = empty(semanticSearch            ) ? 'disabled'                         : semanticSearch
+
+@allowed([
+  ''  // allow fallback
+  'gpt-35-turbo'
+  'gpt-35-turbo-16k'
+  'gpt-4'
+  'gpt-4-32k'
+  'gpt-4o'
+  'gpt-4o-mini'
+])
+param chatGptModelName string = ''
+var _chatGptModelName           = empty(chatGptModelName          ) ? 'gpt-4o'                           : chatGptModelName
+
+@allowed([
+  '' // allow fallback
+  'Standard'
+  'ProvisionedManaged'
+  'GlobalStandard'
+])
+param chatGptModelDeploymentType string = ''
+var _chatGptModelDeploymentType  = empty(chatGptModelDeploymentType ) ? 'GlobalStandard'                  : chatGptModelDeploymentType
+
+@allowed([
+  '' // allow fallback
+  '0613'
+  '1106'
+  '1106-Preview'
+  '0125-preview'
+  'turbo-2024-04-09'
+  '2024-05-13'
+  '2024-11-20'
+])
+param chatGptModelVersion string = ''
+var _chatGptModelVersion         = empty(chatGptModelVersion       ) ? '2024-11-20'                      : chatGptModelVersion
+
+param chatGptDeploymentName string = ''
+var _chatGptDeploymentName      = empty(chatGptDeploymentName      ) ? 'chat'                             : chatGptDeploymentName
+
+param embeddingsModelName string = ''
+var _embeddingsModelName       = empty(embeddingsModelName        ) ? 'text-embedding-3-large'           : embeddingsModelName
+
+@allowed(['', 'Standard'])
+param embeddingsDeploymentType string = ''
+var _embeddingsDeploymentType  = empty(embeddingsDeploymentType   ) ? 'Standard'                         : embeddingsDeploymentType
+
+@allowed(['', '1', '2'])
+param embeddingsModelVersion string = ''
+var _embeddingsModelVersion   = empty(embeddingsModelVersion      ) ? '1'                                : embeddingsModelVersion
+
+param embeddingsDeploymentName string = ''
+var _embeddingsDeploymentName  = empty(embeddingsDeploymentName   ) ? 'text-embedding'                   : embeddingsDeploymentName
 
 //////////////////////////////////////////////////////////////////////////
 // VARIABLES
 //////////////////////////////////////////////////////////////////////////
 
-// Standard variables.
-var tags = union({ env: environmentName }, deploymentTags)
-var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var tags = union({ env: _environmentName }, deploymentTags)
 
-// Reuse defaults
-var azureReuseDefaults = {
-  cosmosDbReuse: false
-  appInsightsReuse: false
-  appServicePlanReuse: false
-  appServiceReuse: false
-  dataIngestionFunctionAppReuse: false
-  aiServicesReuse: false
-  aoaiReuse: false
-  storageReuse: false
-  keyVaultReuse: false
-  aiSearchReuse: false
-}
-var reuseConfig = union(azureReuseDefaults, azureReuseConfig)
-
-// Cosmos DB defaults.
-var azureDbDefaults = {
-  dbAccountName: 'dbgpt0-${resourceToken}'
-  dbDatabaseName: 'db0-${resourceToken}'
-  conversationContainerName: 'conversations'
-  datasourcesContainerName: 'datasources'
-}
-var dbConfig = union(azureDbDefaults, azureDbConfig)
-
-// Compute final names based on resourceToken. If the user did not supply an override, compute the name.
-var finalAppConfigName = empty(appConfigName) ? 'appconfig-${resourceToken}' : appConfigName
-var finalContainerRegistryName = empty(containerRegistryName) ? 'cr${resourceToken}' : containerRegistryName
-var finalDataIngestFunctionAppName = empty(dataIngestFunctionAppName) ? 'funcdataingest-${resourceToken}' : dataIngestFunctionAppName
-var finalKeyVaultName = empty(keyVaultName) ? 'kv0-${resourceToken}' : keyVaultName
-var finalAppInsightsName = empty(appInsightsName) ? 'appins0-${resourceToken}' : appInsightsName
-var finalAppServicePlanName = empty(appServicePlanName) ? 'appplan0-${resourceToken}' : appServicePlanName
-var finalFrontEndAppServiceName = empty(frontEndAppServiceName) ? 'webgpt0-${resourceToken}' : frontEndAppServiceName
-var finalStorageAccountName = empty(storageAccountName) ? 'strag0${resourceToken}' : storageAccountName
-var finalAiServicesName = empty(aiServicesName) ? 'ai0-${resourceToken}' : aiServicesName
-var finalOpenAiServiceName = empty(openAiServiceName) ? 'oai0-${resourceToken}' : openAiServiceName
-var finalSearchServiceName = empty(searchServiceName) ? 'search0-${resourceToken}' : searchServiceName
-
-// For Cosmos DB, use the computed account name from dbConfig.
-var finalCosmosDbAccountNameFromConfig = dbConfig.dbAccountName
-
-// Abbreviation dictionary for naming in the AI environment module.
+// Abbreviation dictionary
 var abbrs = {
-  resourcesResourceGroups: 'rg-'
+  resourcesResourceGroups: 'rg'
   insightsComponents: 'appins'
   keyVaultVaults: 'kv'
   storageStorageAccounts: 'st'
   operationalInsightsWorkspaces: 'law'
   searchSearchServices: 'search'
+  appConfigurationStores: 'appconfig'
+  containerRegistries: 'cr'
+  webSites: 'webgpt'
+  serverfarms: 'appplan'
+  cognitiveServicesAccounts: 'ai'
+  openaiServices: 'oai'
+  functionApps: 'funcdataingest'
+  cosmosDbAccount: 'dbgpt'
+  cosmosDbDatabase: 'db'
 }
-
-// Derive a project name for the AI environment.
-var projectNameResolved = empty(aiProjectName) ? 'ai-project-${resourceToken}' : aiProjectName
 
 //////////////////////////////////////////////////////////////////////////
-// RESOURCES
+// MODULES 
 //////////////////////////////////////////////////////////////////////////
 
-// 1. Application Configuration Store
-resource appConfig 'Microsoft.AppConfiguration/configurationStores@2021-03-01-preview' = {
-  name: finalAppConfigName
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  tags: tags
-}
-
-// 2. Container Registry
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2019-05-01' = {
-  name: finalContainerRegistryName
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    adminUserEnabled: true
-  }
-  tags: tags
-}
-
-// 3. Log Analytics Workspace for Monitoring (used by the Container App Environment)
-param useLogAnalytics bool = true
-resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = if (useLogAnalytics) {
-  name: empty(logAnalyticsWorkspaceName) ? 'law-${resourceToken}' : logAnalyticsWorkspaceName
-  location: location
-  sku: {
-    name: 'pergb2018'
-  }
-  properties: {
-    retentionInDays: 30
-  }
-  tags: tags
-}
-var logAnalyticsCustomerId = useLogAnalytics ? logAnalytics.properties.customerId : ''
-var logAnalyticsSharedKey = useLogAnalytics ? first(listKeys(logAnalytics.id, '2023-09-01').value).primarySharedKey : ''
-
-// 4. AI Foundry Environment (Project + Hub)
-module aiEnv 'core/host/ai-environment.bicep' = if (!foundryHubReuse && empty(aiExistingProjectConnectionString)) {
-  name: 'aiEnv'
-  scope: resourceGroup()
+// 1. App Configuration Store
+module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.1.1' = {
+  name: 'appConfigModule'
   params: {
-    location: location
-    tags: tags
-    hubName: empty(aiHubName) ? 'ai-hub-${resourceToken}' : aiHubName
-    projectName: projectNameResolved
-    keyVaultName: finalKeyVaultName
-    storageAccountName: finalStorageAccountName
-    aiServicesName: empty(aiServicesName) ? 'aoai-${resourceToken}' : aiServicesName
-    aiServicesConnectionName: empty(aiServicesConnectionName) ? 'aoai-${resourceToken}' : aiServicesConnectionName
-    aiServicesContentSafetyConnectionName: empty(aiServicesContentSafetyConnectionName) ? 'aoai-content-safety-connection' : aiServicesContentSafetyConnectionName
-    logAnalyticsName: empty(logAnalyticsWorkspaceName) ? '${abbrs.operationalInsightsWorkspaces}${resourceToken}' : logAnalyticsWorkspaceName
-    applicationInsightsName: finalAppInsightsName
-    searchServiceName: finalSearchServiceName
-    searchConnectionName: empty(searchConnectionName) ? 'search-service-connection' : searchConnectionName
-  }
-}
-resource existingFoundryHub 'Microsoft.AI/foundryHubs@2023-01-01' existing = if (foundryHubReuse) {
-  name: existingFoundryHubName
-  scope: resourceGroup(existingFoundryHubResourceGroupName)
-}
-var foundryHubId = foundryHubReuse ? existingFoundryHub.id : (empty(aiExistingProjectConnectionString) ? aiEnv.outputs.hubId : '')
-
-// 5. Construct project connection string from AI environment outputs.
-var projectConnectionString = empty(aiEnv.outputs.discoveryUrl)
-  ? aiExistingProjectConnectionString
-  : '${split(aiEnv.outputs.discoveryUrl, '/')[2]};${subscription().subscriptionId};${resourceGroup().name};${projectNameResolved}'
-
-// 6. Data Ingest Function App
-module dataIngestion 'core/host/functions.bicep' = {
-  name: 'dataIngestionModule'
-  params: {
-    name: finalDataIngestFunctionAppName
-    functionAppResourceGroupName: resourceGroup().name
-    functionAppReuse: reuseConfig.dataIngestionFunctionAppReuse
-    location: location
-    tags: union(tags, { 'azd-service-name': 'dataIngest' })
-    appServicePlanId: ''  // External App Service Plan ID (if applicable)
-    runtimeName: 'python'
-    runtimeVersion: funcAppRuntimeVersion
-    appSettings: [
+    name:     _appConfigName
+    location: _location
+    sku:      'Standard'
+    tags:     tags
+    keyValues: [
       {
-        name: 'DOCINT_API_VERSION'
-        value: '2024-11-30'
+        name:  'AI_SERVICES_NAME'
+        value: empty(aiServicesName)
+          ? '${abbrs.cognitiveServicesAccounts}0-${resourceToken}'
+          : aiServicesName
       }
       {
-        name: 'AZURE_KEY_VAULT_NAME'
-        value: finalKeyVaultName
+        name:  'APP_CONFIG_NAME'
+        value: _appConfigName
       }
       {
-        name: 'FUNCTION_APP_NAME'
-        value: finalDataIngestFunctionAppName
+        name:  'APP_INSIGHTS_NAME'
+        value: _appInsightsName
       }
       {
-        name: 'SEARCH_INDEX_NAME'
-        value: 'ragindex'
+        name:  'APP_SERVICE_PLAN_NAME'
+        value: _appServicePlanName
+      }
+      { name: 'AZURE_OPENAI_API_VERSION',          value: '2024-10-21' }
+      { name: 'AZURE_OPENAI_CHATGPT_DEPLOYMENT',    value: 'chat' }
+      { name: 'AZURE_OPENAI_EMBEDDING_DEPLOYMENT',  value: 'text-embedding' }
+      { name: 'AZURE_OPENAI_EMBEDDING_MODEL',       value: 'text-embedding-3-large' }
+      {
+        name:  'AZURE_OPENAI_SERVICE_NAME'
+        value: _aiServicesName
+      }
+      { name: 'AZURE_RESOURCE_GROUP_NAME',         value: resourceGroup().name }
+      {
+        name:  'CONTAINER_REGISTRY_NAME'
+        value: _containerRegistryName
       }
       {
-        name: 'SEARCH_ANALYZER_NAME'
-        value: 'standard'
+        name:  'DATA_INGEST_FUNCTION_APP_NAME'
+        value: _dataIngestFunctionAppName
       }
       {
-        name: 'SEARCH_API_VERSION'
-        value: '2024-07-01'
+        name:  'FRONT_END_APP_SERVICE_NAME'
+        value: _frontEndAppServiceName
       }
       {
-        name: 'SEARCH_INDEX_INTERVAL'
-        value: 'PT1H'
+        name:  'FUNCTION_APP_NAME'
+        value: _dataIngestFunctionAppName
       }
       {
-        name: 'STORAGE_ACCOUNT_NAME'
-        value: finalStorageAccountName
+        name:  'KEY_VAULT_NAME'
+        value: _keyVaultName
+      }
+      { name: 'LOCATION',                          value: _location }
+      {
+        name:  'OPENAI_SERVICE_NAME'
+        value: _aiServicesName
       }
       {
-        name: 'STORAGE_CONTAINER'
-        value: 'documents'
+        name:  'SEARCH_SERVICE_NAME'
+        value: _searchServiceName
       }
       {
-        name: 'STORAGE_CONTAINER_IMAGES'
-        value: 'documents-images'
+        name:  'STORAGE_ACCOUNT_NAME'
+        value: _solutionStorageAccountName
       }
-      {
-        name: 'AZURE_FORMREC_SERVICE'
-        value: finalAiServicesName
-      }
-      {
-        name: 'AZURE_OPENAI_API_VERSION'
-        value: '2024-10-21'
-      }
-      {
-        name: 'AZURE_SEARCH_APPROACH'
-        value: 'hybrid'
-      }
-      {
-        name: 'AZURE_SEARCH_SERVICE'
-        value: finalSearchServiceName
-      }
-      {
-        name: 'AZURE_SEARCH_INDEX_NAME'
-        value: 'ragindex'
-      }
-      {
-        name: 'AZURE_OPENAI_SERVICE_NAME'
-        value: finalOpenAiServiceName
-      }
-      {
-        name: 'AZURE_OPENAI_EMBEDDING_DEPLOYMENT'
-        value: 'text-embedding'
-      }
-      {
-        name: 'AZURE_EMBEDDINGS_VECTOR_SIZE'
-        value: '3072'
-      }
-      {
-        name: 'AZURE_OPENAI_EMBEDDING_MODEL'
-        value: 'text-embedding-3-large'
-      }
-      {
-        name: 'AZURE_OPENAI_CHATGPT_DEPLOYMENT'
-        value: 'chat'
-      }
-      {
-        name: 'NUM_TOKENS'
-        value: '2048'
-      }
-      {
-        name: 'MIN_CHUNK_SIZE'
-        value: '100'
-      }
-      {
-        name: 'TOKEN_OVERLAP'
-        value: '200'
-      }
-      {
-        name: 'ENABLE_ORYX_BUILD'
-        value: 'true'
-      }
-      {
-        name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-        value: 'true'
-      }
-      {
-        name: 'LOGLEVEL'
-        value: 'INFO'
-      }
-      {
-        name: 'AppConfigConnectionString'
-        value: empty(appConfig.listKeys()) || empty(appConfig.listKeys().value) ? 'default-connection-string' : first(appConfig.listKeys().value).connectionString
-      }
+      { name: 'STORAGE_CONTAINER',                 value: 'documents' }
+      { name: 'STORAGE_CONTAINER_IMAGES',          value: 'documents-images' }
+      { name: 'NUM_TOKENS',                        value: '2048' }
+      { name: 'MIN_CHUNK_SIZE',                    value: '100' }
+      { name: 'TOKEN_OVERLAP',                     value: '200' }
+      { name: 'ENVIRONMENT_NAME',                  value: _environmentName }
+      { name: 'RESOURCE_TOKEN',                    value: resourceToken }
     ]
   }
 }
 
-// 7. Data Ingest Storage Account
-module dataIngestionStorage 'core/storage/function-storage-account.bicep' = {
-  name: 'dataIngestionStorageModule'
+var appConfigConnectionString = listKeys(
+  resourceId(
+    'Microsoft.AppConfiguration/configurationStores',
+    _appConfigName
+  ),
+  '2021-03-01-preview'
+).value[0].connectionString
+
+// 3. Container Registry
+module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
+  name: 'containerRegistryModule'
   params: {
-    name: '${finalStorageAccountName}ing'
-    location: location
-    tags: tags
+    name:     _containerRegistryName
+    location: _location
+    acrSku:   'Basic'
+    tags:     tags
+  }
+}
+
+// 18. Container Apps Environment (required backing resource)
+module containerEnv 'br/public:avm/res/app/managed-environment:0.9.1' = {
+  name: 'containerEnvModule'
+  params: {
+    name:     'ace-${resourceToken}'
+    location: _location
+    tags:     tags
+  }
+}
+
+
+// 19. Orchestrator Container App (AVM v0.16.0)
+module orchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
+  name: 'orchestratorContainerAppModule'
+  dependsOn: [
+    registry         // ensure ACR exists
+    appConfig        // ensure AppConfig exists
+    containerEnv     // ensure the managed env exists
+  ]
+  params: {
+    name                  : _orchestratorContainerAppName
+    location              : _location
+    environmentResourceId : containerEnv.outputs.id
+
+    // ACR credentials so the CA can pull your image
+    registries: [
+      {
+        server   : registry.outputs.loginServer
+        username : registry.outputs.username
+        password : registry.outputs.password
+      }
+    ]
+
+    // the single “orchestrator” container definition
     containers: [
       {
-        name: 'deploymentpackage'
+        name     : 'orchestrator'
+        image    : _orchestratorImage
+        resources: {
+          cpu    : '0.5'
+          memory : '1.0Gi'
+        }
+        // wire in AppConfig via an env var
+        env: [
+          {
+            name      : 'AppConfigConnectionString'
+            secretRef : 'appConfigConn'
+          }
+        ]
       }
     ]
-    publicNetworkAccess: 'Enabled'
-  }
-}
 
-// 8. Cosmos DB Account and Database
-var finalCosmosDbAccountName = finalCosmosDbAccountNameFromConfig
+    // store AppConfig connection string as a CA secret
+    secrets: [
+      {
+        name  : 'appConfigConn'
+        value : appConfigConnectionString
+      }
+    ]
 
-// Deploy the Cosmos DB account and SQL database using a module.
-module cosmosAccountModule 'core/database/cosmos-account.bicep' = {
-  name: 'cosmosAccountModule'
-  params: {
-    accountName: dbConfig.accountName
-    location: location
-    sqlDatabaseName: dbConfig.sqlDatabaseName
-  }
-}
-
-// Deploy the Conversation Container. This module now depends on the Cosmos account module.
-module conversationContainer 'core/database/cosmos-container.bicep' = {
-  name: 'conversationContainerModule'
-  params: {
-    databaseName: cosmosAccountModule.outputs.databaseName
-    cosmosAccountName: cosmosAccountModule.outputs.cosmosAccountName
-    containerName: dbConfig.conversationContainerName
-    partitionKeyPath: '/id'
-    defaultTtl: -1
-  }
-}
-
-// Deploy the Datasources Container. This module also depends on the Cosmos account module.
-module datasourcesContainer 'core/database/cosmos-container.bicep' = {
-  name: 'datasourcesContainerModule'
-  params: {
-    databaseName: cosmosAccountModule.outputs.databaseName
-    cosmosAccountName: cosmosAccountModule.outputs.cosmosAccountName
-    containerName: dbConfig.datasourcesContainerName
-    partitionKeyPath: '/id'
-    defaultTtl: -1
-  }
-}
-
-// 9. Key Vault
-module keyVaultModule 'core/security/keyvault.bicep' = {
-  name: 'keyVaultModule'
-  params: {
-    name: finalKeyVaultName
-    location: location
     tags: tags
-    principalId: principalId
   }
 }
 
-// 10. Application Insights
-module appInsights 'core/monitor/applicationinsights.bicep' = {
+// 4. Log Analytics Workspace
+module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.11.1' = {
+  name: 'logAnalyticsModule'
+  params: {
+    name:          _logAnalyticsWorkspaceName
+    location:      _location
+    skuName:       'PerGB2018'  // updated
+    dataRetention: 30           // updated
+    tags:          tags
+  }
+}
+
+// 6. Application Insights
+module appInsights 'br/public:avm/res/insights/component:0.6.0' = {
   name: 'appInsightsModule'
   params: {
-    name: finalAppInsightsName
-    location: location
-    logAnalyticsWorkspaceId: logAnalytics.id
+    name:                _appInsightsName
+    location:            _location
+    workspaceResourceId: logAnalytics.outputs.resourceId
+    applicationType:     'web'
+    kind:                'web'
+    disableIpMasking:    false
+    tags:                tags
   }
 }
 
+// 5. Key Vault
+module keyVault 'br/public:avm/res/key-vault/vault:0.12.1' = {
+  name: 'keyVaultModule'
+  params: {
+    name:                  _keyVaultName
+    location:              _location
+    sku:                   'standard'
+    enableRbacAuthorization: true
+    tags:                  tags
+  }
+}
 
-// 11. App Service Plan (for Front-End App Service)
-module appServicePlan 'core/host/appserviceplan.bicep' = {
+// 7. AI Foundry Storage Account
+module aiFoundryStorageAccount 'br/public:avm/res/storage/storage-account:0.19.0' = {
+  name: 'aiFoundryStorageModule'
+  params: {
+    name:                     _aiFoundryStorageAccountName
+    location:                 _location
+    skuName:                  'Standard_LRS'
+    kind:                     'StorageV2'
+    allowBlobPublicAccess:    false
+    supportsHttpsTrafficOnly: true
+    tags:                     tags
+  }
+}
+
+// 7. Shared App Service Plan
+module appServicePlan 'br/public:avm/res/web/serverfarm:0.4.1' = {
   name: 'appServicePlanModule'
   params: {
-    name: finalAppServicePlanName
-    location: location
-    tags: tags
-    sku: {
-      name: 'P0v3'
-      capacity: 1
-    }
-    kind: 'linux'
+    name:         _appServicePlanName
+    location:     _location
+    skuName:      'P0v3'
+    skuCapacity:  1
+    kind:         'linux'
+    reserved:     true
+    tags:         tags
   }
 }
 
-// 12. Front-End App Service (with AppConfig connection string)
-module frontEnd 'core/host/appservice.bicep' = {
-  name: 'frontEndModule'
+// 8. Function App Storage Account
+module functionAppStorageAccount 'br/public:avm/res/storage/storage-account:0.19.0' = {
+  name: 'functionAppStorageModule'
   params: {
-    name: finalFrontEndAppServiceName
-    location: location
-    tags: union(tags, { 'azd-service-name': 'frontend' })
-    appServicePlanId: appServicePlan.outputs.id
-    runtimeName: 'python'
-    runtimeVersion: appServiceRuntimeVersion
-    scmDoBuildDuringDeployment: true
-    applicationInsightsName: finalAppInsightsName
-    appSettings: {
-      'AppConfigConnectionString': empty(appConfig.listKeys()) ? 'default-connection-string' : first(appConfig.listKeys().value).connectionString
-      // You can add additional settings here as key-value pairs
-    }    
-    appCommandLine: 'python -m uvicorn main:app --host 0.0.0.0 --port \${PORT:-8000}'
+    name:                     _functionAppStorageAccountName
+    location:                 _location
+    skuName:                  'Standard_LRS'
+    kind:                     'StorageV2'
+    allowBlobPublicAccess:    false
+    supportsHttpsTrafficOnly: true
+    tags:                     tags
   }
 }
 
-// 13. AI Services (Cognitive Services)
-module aiServices 'core/ai/aiservices.bicep' = {
+// 8. Data Ingestion Function App
+module functionApp 'br/public:avm/res/web/site:0.15.1' = {
+  name: 'functionAppModule'
+  dependsOn: [
+    appConfig
+  ]
+  params: {
+    name: _dataIngestFunctionAppName
+    kind:                 'functionapp,linux'
+    location:             _location
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities:    { systemAssigned: true }
+    siteConfig: {
+      linuxFxVersion: 'python|${funcAppRuntimeVersion}'
+    }
+    appSettingsKeyValuePairs: {
+      AppConfigConnectionString: appConfigConnectionString
+      ENABLE_ORYX_BUILD:          'true'
+      SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
+      LOGLEVEL:                   'INFO'
+    }
+    tags: tags
+  }
+}
+
+// 16. Front‑End App Service
+module frontEnd 'br/public:avm/res/web/site:0.15.1' = {
+  name: 'frontEndModule'
+  dependsOn: [
+    appConfig
+  ]
+  params: {
+    name: _frontEndAppServiceName
+    kind:                 'app,linux'
+    location:             _location
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities:    { systemAssigned: true }
+    siteConfig: {
+      linuxFxVersion: 'python|${frontEndAppRuntimeVersion}'
+      appCommandLine: 'python -m uvicorn main:app --host 0.0.0.0 --port \${PORT:-8000}'
+    }
+    appSettingsKeyValuePairs: {
+      AppConfigConnectionString: appConfigConnectionString
+    }
+    tags: union(tags, { 'azd-service-name': 'frontend' })
+  }
+}
+
+module databaseAccount 'br/public:avm/res/document-db/database-account:0.12.0' = {
+  name: 'databaseAccountModule'
+  params: {
+    name:                   _dbAccountName  
+    location:               _location
+    defaultConsistencyLevel:'Session'
+    capabilitiesToAdd: [
+      'EnableServerless'
+    ]
+    tags:                   tags
+    sqlDatabases: [
+      {
+        name:       _dbDatabaseName
+        throughput: 400
+        containers: [
+          {
+            name:       _conversationContainerName
+            paths:      ['/id']
+            defaultTtl: -1
+            throughput: 400
+          }
+          {
+            name:       _datasourcesContainerName
+            paths:      ['/id']
+            defaultTtl: -1
+            throughput: 400
+          }
+        ]
+      }
+    ]
+  }
+}
+
+// 10. Azure Cognitive Search Service
+module searchService 'br/public:avm/res/search/search-service:0.9.2' = {
+  name: 'searchServiceModule'
+  params: {
+    // Required parameters
+    name:                              _searchServiceName
+    location:                          _location
+    // Tags
+    tags: tags
+    // SKU & capacity
+    sku: 'standard'
+    semanticSearch: empty(semanticSearch) ? 'disabled' : semanticSearch
+  }
+}
+
+
+// AI Services (including OpenAI deployments)
+module aiServices 'br/public:avm/res/cognitive-services/account:0.10.2' = {
   name: 'aiServicesModule'
   params: {
-    name: finalAiServicesName
-    location: location
-    publicNetworkAccess: 'Enabled'
-    kind: 'CognitiveServices'
-    tags: tags
-    sku: {
-      name: 'S0'
-    }
-  }
-}
+    kind:     'AIServices'
+    name:     _aiServicesName
+    location: _location
+    sku:      'S0'
+    tags:     tags
 
-// 14. Azure OpenAI
-module openAi 'core/ai/aiservices.bicep' = {
-  name: 'openAiModule'
-  params: {
-    name: finalOpenAiServiceName
-    location: location
-    publicNetworkAccess: 'Enabled'
-    tags: tags
-    sku: {
-      name: 'S0'
-    }
     deployments: [
       {
-        name: 'chat'
+        name: _chatGptDeploymentName       
         model: {
-          format: 'OpenAI'
-          name: 'gpt-4o'
-          version: '2024-11-20'
+          format:  'OpenAI'
+          name:    _chatGptModelName
+          version: _chatGptModelVersion
         }
         sku: {
-          name: 'GlobalStandard'
-          capacity: 100
+          name:     _chatGptModelDeploymentType
+          capacity: chatGptDeploymentCapacity
         }
       }
       {
-        name: 'text-embedding'
+        name: _embeddingsDeploymentName      
         model: {
-          format: 'OpenAI'
-          name: 'text-embedding-3-large'
-          version: '1'
+          format:  'OpenAI'
+          name:    _embeddingsModelName
+          version: _embeddingsModelVersion
         }
         sku: {
-          name: 'Standard'
-          capacity: 120
+          name:     _embeddingsDeploymentType
+          capacity: embeddingsDeploymentCapacity
         }
       }
     ]
   }
 }
 
-// 15. AI Search Service
-module searchService 'core/search/search-services.bicep' = {
-  name: 'searchServiceModule'
+// 17. API Management Service + AI Services API + Policy + Subscription
+module apimService 'br/public:avm/res/api-management/service:0.9.1' = if (provisionAPIM) {
+  name: 'apimModule'
   params: {
-    name: finalSearchServiceName
-    location: location
-    publicNetworkAccess: 'Enabled'
+    name           : empty(apimResourceName) ? 'apim-${resourceToken}' : apimResourceName
+    location       : _location
+    publisherEmail : _apimPublisherEmail
+    publisherName  : _apimPublisherName
+    sku            : _apimSku
+    tags           : tags
+    backends: [
+      {
+        name : 'ai-services-backend'
+        url  : aiServices.outputs.endpoint
+        tls : {
+          validateCertificateChain : true
+          validateCertificateName  : true
+        }
+      }
+    ]
+
+    apis: [
+      {
+        displayName : _openAIAPIDisplayName
+        name        : _openAIAPIName
+        path        : _openAIAPIPath
+        protocols   : [ 'https' ]
+        serviceUrl  : aiServices.outputs.endpoint
+        format      : 'openapi-link'
+        value       : _openAIAPISpecURL
+      }
+    ]
+
+    policies: [
+      {
+        format: 'xml'
+        value: '''
+        <policies>
+          <inbound>
+            <authentication-managed-identity 
+              resource="https://cognitiveservices.azure.com" 
+              output-token-variable-name="managed-id-access-token" 
+              ignore-error="false" />
+            <set-header name="Authorization" exists-action="override">
+              <value>@("Bearer " + (string)context.Variables["managed-id-access-token"])</value>
+            </set-header>
+            <set-backend-service backend-id="ai-services-backend" />
+          </inbound>
+          <!-- empty sections are fine if you want to preserve them -->
+          <backend />
+          <outbound />
+          <on-error />
+        </policies>
+        '''
+      }
+    ]
+
+    subscriptions: [
+      {
+        name        : _openAISubscriptionName
+        displayName : _openAISubscriptionDescription
+        scope       : '/apis'
+      }
+    ]
+  }
+}
+
+
+
+// 13. AI Foundry Hub (custom)
+module aiHub 'core/ai/ai-hub.bicep' = if (!foundryHubReuse && empty(_aiExistingProjectConnectionString)) {
+  name: 'aiHubModule'
+  scope: resourceGroup()
+  params: {
+    location:              _location
+    tags:                  tags
+    hubName:               empty(_aiHubName) 
+                          ? 'aihub-${uniqueString(resourceGroup().id)}' 
+                          : _aiHubName
+    keyVaultName:          keyVault.outputs.name
+    storageAccountName:    aiFoundryStorageAccount.outputs.name
+    applicationInsightsName: appInsights.outputs.name
+  }
+}
+
+resource existingAiHub 'Microsoft.MachineLearningServices/workspaces@2024-01-01-preview' existing = if (foundryHubReuse) {
+  name: _existingFoundryHubName
+  scope: resourceGroup(_existingFoundryHubResourceGroupName)
+}
+var aiHubId = foundryHubReuse ? existingAiHub.id : (empty(_aiExistingProjectConnectionString) ? aiHub.outputs.hubId : '')
+
+// 14. AI Foundry Project (custom)
+module aiProject 'core/ai/ai-project.bicep' = {
+  name: 'aiProjectModule'
+  scope: resourceGroup()
+  params: {
+    location: _location
     tags: tags
-    authOptions: {
-      aadOrApiKey: {
-        aadAuthFailureMode: 'http401WithBearerChallenge'
-      }
-    }
-    sku: {
-      name: 'standard'
-    }
+    projectName: empty(_aiProjectName) ? 'ai-project-${resourceToken}' : _aiProjectName
+    hubResourceId: aiHubId
+    discoveryUrl: empty(aiHub.outputs.hubDiscoveryUrl) ? '' : aiHub.outputs.hubDiscoveryUrl
   }
 }
 
-// 16. Orchestrator Container App Environment
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2022-03-01' = {
-  name: 'containerEnv-${environmentName}'
-  location: location
-  tags: tags
-  properties: {
-    appLogsConfiguration: {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: logAnalytics.properties.customerId
-        sharedKey: first(listKeys(logAnalytics.id, '2023-09-01').value).primarySharedKey
-      }
-    }
-  }
-}
-
-// 17. Orchestrator Container App
-resource orchestratorContainer 'Microsoft.App/containerApps@2022-03-01' = {
-  name: 'orchestratorContainer-${environmentName}'
-  location: location
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    managedEnvironmentId: containerAppEnv.id
-    configuration: {
-      activeRevisionsMode: 'Multiple'
-      ingress: {
-        external: true
-        targetPort: 80
-        transport: 'auto'
-      }
-      registries: [
-        {
-          server: containerRegistry.properties.loginServer
-          username: first(listCredentials(containerRegistry.id, '2019-05-01').value).username
-          passwordSecret: first(listCredentials(containerRegistry.id, '2019-05-01').value).password
-        }
-      ]
-    }
-    template: {
-      containers: [
-        {
-          name: 'orchestrator', image: '${containerRegistry.properties.loginServer}/orchestrator:latest'
-          resources: {
-            limits: {
-              cpu: '0.5'
-              memory: '1Gi'
-            }
-          }
-          env: [
-            {
-              name: 'AppConfigConnectionString'
-              value: first(appConfig.listKeys().value).connectionString
-            }
-          ]
-        }
-      ]
-    }
-  }
-  tags: tags
-}
 
 //////////////////////////////////////////////////////////////////////////
 // OUTPUTS
 //////////////////////////////////////////////////////////////////////////
+// Core parameters
+output AZURE_ENVIRONMENT_NAME                       string = _environmentName
+output AZURE_LOCATION                               string = _location
+output AZURE_DEPLOYMENT_TAGS                        object = deploymentTags
+output AZURE_PRINCIPAL_ID                           string = _principalId
 
-output AZURE_RESOURCE_GROUP_NAME string = resourceGroup().name
-output AZURE_SUBSCRIPTION_ID string = subscription().subscriptionId
-output AZURE_TENANT_ID string = tenant().tenantId
-output AZURE_APP_CONFIG_NAME string = finalAppConfigName
-output AZURE_CONTAINER_REGISTRY_NAME string = finalContainerRegistryName
-output AZURE_FOUNDRY_HUB_ID string = foundryHubReuse ? existingFoundryHub.id : aiEnv.outputs.hubId
-output AZURE_DATA_INGEST_FUNCTION_APP_NAME string = finalDataIngestFunctionAppName
-output AZURE_COSMOS_DB_ACCOUNT_NAME string = finalCosmosDbAccountName
-output AZURE_KEY_VAULT_NAME string = finalKeyVaultName
-output AZURE_APP_INSIGHTS_NAME string = finalAppInsightsName
-output AZURE_APP_SERVICE_PLAN_NAME string = finalAppServicePlanName
-output AZURE_FRONT_END_APP_SERVICE_NAME string = finalFrontEndAppServiceName
-output AZURE_STORAGE_ACCOUNT_NAME string = finalStorageAccountName
-output AZURE_AI_SERVICES_NAME string = finalAiServicesName
-output AZURE_OPENAI_SERVICE_NAME string = finalOpenAiServiceName
-output AZURE_CHAT_GPT_DEPLOYMENT_NAME string = openAi.outputs.name
-output AZURE_SEARCH_SERVICE_NAME string = finalSearchServiceName
+// AI Foundry inputs
+output AZURE_AI_EXISTING_PROJECT_CONNECTION_STRING  string = _aiExistingProjectConnectionString
+output AZURE_FOUNDRY_HUB_REUSE                      bool   = foundryHubReuse
+output AZURE_EXISTING_FOUNDRY_HUB_RESOURCE_GROUP_NAME string = _existingFoundryHubResourceGroupName
+output AZURE_EXISTING_FOUNDRY_HUB_NAME              string = _existingFoundryHubName
+output AZURE_AI_HUB_NAME                            string = aiHub.outputs.hubName
+output AZURE_AI_PROJECT_NAME                        string = aiProject.outputs.projectName
+
+// Platform service names
+output AZURE_APP_CONFIG_NAME                        string = appConfig.outputs.name
+output AZURE_CONTAINER_REGISTRY_NAME                string = registry.outputs.name
+output AZURE_LOG_ANALYTICS_WORKSPACE_NAME           string = logAnalytics.outputs.name
+output AZURE_APP_INSIGHTS_NAME                      string = appInsights.outputs.name
+output AZURE_KEY_VAULT_NAME                         string = keyVault.outputs.name
+output AZURE_AIFOUNDRY_STORAGE_ACCOUNT_NAME         string = aiFoundryStorageAccount.outputs.name
+output AZURE_FUNCTION_APP_STORAGE_ACCOUNT_NAME      string = functionAppStorageAccount.outputs.name
+output AZURE_APP_SERVICE_PLAN_NAME                  string = appServicePlan.outputs.name
+output AZURE_FUNCTION_APP_NAME                      string = functionApp.outputs.name
+output AZURE_FRONT_END_APP_SERVICE_NAME             string = frontEnd.outputs.name
+output AZURE_SEARCH_SERVICE_NAME                    string = searchService.outputs.name
+output AZURE_ORCHESTRATOR_APP_NAME                  string = orchestrator.outputs.name
+output AZURE_ORCHESTRATOR_APP_FQDN                  string = orchestrator.outputs.fqdn
+output AZURE_ORCHESTRATOR_APP_ID                    string = orchestrator.outputs.resourceId
+
+// AI Services (OpenAI) deployments
+output AZURE_OPENAI_SERVICE_NAME                    string = aiServices.outputs.name
+output AZURE_CHATGPT_DEPLOYMENT_NAME                string = _chatGptDeploymentName
+output AZURE_EMBEDDINGS_DEPLOYMENT_NAME             string = _embeddingsDeploymentName
+
+// API Management
+output AZURE_PROVISION_APIM                         bool   = provisionAPIM
+output AZURE_APIM_SKU_CAPACITY                      int    = apimSkuCount
+output AZURE_APIM_SERVICE_NAME                      string = apimService.outputs.name
+output AZURE_APIM_SKU                               string = _apimSku
+output AZURE_APIM_PUBLISHER_EMAIL                   string = _apimPublisherEmail
+output AZURE_APIM_PUBLISHER_NAME                    string = _apimPublisherName
+output AZURE_APIM_AI_SUBSCRIPTION_NAME              string = _openAISubscriptionName
+output AZURE_APIM_AI_SUBSCRIPTION_DESCRIPTION       string = _openAISubscriptionDescription
+
+// Runtime & feature flags
+output AZURE_FUNCAPP_RUNTIME_VERSION                string = _funcAppRuntimeVersion
+output AZURE_FRONTEND_RUNTIME_VERSION               string = _frontEndAppRuntimeVersion
+output AZURE_SEMANTIC_SEARCH                        string = _semanticSearch
+
+output AZURE_DB_ACCOUNT_NAME                        string = _dbAccountName
+output AZURE_DB_DATABASE_NAME                       string = _dbDatabaseName
+
+output AZURE_CONVERSATION_CONTAINER_NAME            string = _conversationContainerName
+output AZURE_DATASOURCES_CONTAINER_NAME             string = _datasourcesContainerName
