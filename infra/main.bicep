@@ -310,6 +310,7 @@ module containerEnv 'br/public:avm/res/app/managed-environment:0.9.1' = {
     name:     'ace-${resourceToken}'
     location: _location
     tags:     tags
+    logAnalyticsWorkspaceResourceId: logAnalytics.outputs.resourceId
   }
 }
 
@@ -317,26 +318,15 @@ module containerEnv 'br/public:avm/res/app/managed-environment:0.9.1' = {
 // 19. Orchestrator Container App (AVM v0.16.0)
 module orchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
   name: 'orchestratorContainerAppModule'
-  dependsOn: [
-    registry         // ensure ACR exists
-    appConfig        // ensure AppConfig exists
-    containerEnv     // ensure the managed env exists
-  ]
   params: {
-    name                  : _orchestratorContainerAppName
-    location              : _location
-    environmentResourceId : containerEnv.outputs.id
+    name:                  _orchestratorContainerAppName
+    location:              _location
+    environmentResourceId: containerEnv.outputs.resourceId
 
-    // ACR credentials so the CA can pull your image
-    registries: [
-      {
-        server   : registry.outputs.loginServer
-        username : registry.outputs.username
-        password : registry.outputs.password
-      }
-    ]
+    managedIdentities: {
+      systemAssigned: true
+    }
 
-    // the single “orchestrator” container definition
     containers: [
       {
         name     : 'orchestrator'
@@ -345,7 +335,6 @@ module orchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
           cpu    : '0.5'
           memory : '1.0Gi'
         }
-        // wire in AppConfig via an env var
         env: [
           {
             name      : 'AppConfigConnectionString'
@@ -355,7 +344,6 @@ module orchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
       }
     ]
 
-    // store AppConfig connection string as a CA secret
     secrets: [
       {
         name  : 'appConfigConn'
@@ -450,15 +438,26 @@ module functionAppStorageAccount 'br/public:avm/res/storage/storage-account:0.19
 // 8. Data Ingestion Function App
 module functionApp 'br/public:avm/res/web/site:0.15.1' = {
   name: 'functionAppModule'
-  dependsOn: [
-    appConfig
-  ]
   params: {
-    name: _dataIngestFunctionAppName
-    kind:                 'functionapp,linux'
-    location:             _location
-    serverFarmResourceId: appServicePlan.outputs.resourceId
-    managedIdentities:    { systemAssigned: true }
+    name:                     _dataIngestFunctionAppName
+    kind:                     'functionapp,linux'
+    location:                 _location
+    serverFarmResourceId:     appServicePlan.outputs.resourceId
+    managedIdentities:        { systemAssigned: true }
+    // link to Log Analytics via diagnosticSettings:
+    diagnosticSettings: [
+      {
+        name:               'functionApp-diag'
+        workspaceResourceId: logAnalytics.outputs.resourceId
+      }
+    ]
+    // if you also want App Insights:
+    appInsightResourceId:     appInsights.outputs.resourceId
+
+    // storage mount for function triggers/logs:
+    storageAccountResourceId:            functionAppStorageAccount.outputs.resourceId
+    storageAccountUseIdentityAuthentication: true
+
     siteConfig: {
       linuxFxVersion: 'python|${funcAppRuntimeVersion}'
     }
@@ -472,18 +471,28 @@ module functionApp 'br/public:avm/res/web/site:0.15.1' = {
   }
 }
 
+
 // 16. Front‑End App Service
 module frontEnd 'br/public:avm/res/web/site:0.15.1' = {
   name: 'frontEndModule'
-  dependsOn: [
-    appConfig
-  ]
   params: {
-    name: _frontEndAppServiceName
-    kind:                 'app,linux'
-    location:             _location
-    serverFarmResourceId: appServicePlan.outputs.resourceId
-    managedIdentities:    { systemAssigned: true }
+    name:                     _frontEndAppServiceName
+    kind:                     'app,linux'
+    location:                 _location
+    serverFarmResourceId:     appServicePlan.outputs.resourceId
+    managedIdentities:        { systemAssigned: true }
+    diagnosticSettings: [
+      {
+        name:               'frontEnd-diag'
+        workspaceResourceId: logAnalytics.outputs.resourceId
+      }
+    ]
+    appInsightResourceId:     appInsights.outputs.resourceId
+
+    // if your front end also needs a storage account:
+    storageAccountResourceId:            functionAppStorageAccount.outputs.resourceId
+    storageAccountUseIdentityAuthentication: true
+
     siteConfig: {
       linuxFxVersion: 'python|${frontEndAppRuntimeVersion}'
       appCommandLine: 'python -m uvicorn main:app --host 0.0.0.0 --port \${PORT:-8000}'
