@@ -16,11 +16,10 @@ param storageAccountName string
 @description('Application Insights resource name')
 param applicationInsightsName string
 
-var resourceSuffix = uniqueString(subscription().id, resourceGroup().id)
-
-resource hub 'Microsoft.MachineLearningServices/workspaces@2024-01-01-preview' = {
-  name: '${hubName}-${resourceSuffix}'
+resource hub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
+  name: hubName
   location: location
+  tags: tags  
   sku: {
     name: 'Basic'
     tier: 'Basic'
@@ -47,3 +46,4 @@ resource hub 'Microsoft.MachineLearningServices/workspaces@2024-01-01-preview' =
 output hubName string = hub.name
 output hubId string = hub.id
 output hubDiscoveryUrl string = hub.properties.discoveryUrl
+output systemAssignedMIPrincipalId string = hub.identity.principalId

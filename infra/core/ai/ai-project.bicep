@@ -13,10 +13,8 @@ param hubResourceId string
 @description('Discovery URL of the AI Hub (optional)')
 param discoveryUrl string = ''
 
-var resourceSuffix = uniqueString(subscription().id, resourceGroup().id, projectName)
-
-resource aiProject 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview' = {
-  name: '${projectName}-${resourceSuffix}'
+resource AIProject 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
+  name: projectName
   location: location
   tags: tags
   sku: {
@@ -34,12 +32,14 @@ resource aiProject 'Microsoft.MachineLearningServices/workspaces@2024-07-01-prev
     publicNetworkAccess: 'Enabled'
     discoveryUrl: empty(discoveryUrl) ? 'https://${location}.api.azureml.ms/discovery' : discoveryUrl
     hubResourceId: hubResourceId
+    
   }
 }
 
-output projectName string = aiProject.name
-output projectId string = aiProject.id
-output projectDiscoveryUrl string = aiProject.properties.discoveryUrl
+output projectName string = AIProject.name
+output projectId string = AIProject.id
+output projectDiscoveryUrl string = AIProject.properties.discoveryUrl
 
-var projectEndpoint = replace(replace(aiProject.properties.discoveryUrl, 'https://', ''), '/discovery', '')
-output projectConnectionString string = '${projectEndpoint};${subscription().subscriptionId};${resourceGroup().name};${aiProject.name}'
+var projectEndpoint = replace(replace(AIProject.properties.discoveryUrl, 'https://', ''), '/discovery', '')
+output projectConnectionString string = '${projectEndpoint};${subscription().subscriptionId};${resourceGroup().name};${AIProject.name}'
+output systemAssignedMIPrincipalId string = AIProject.identity.principalId

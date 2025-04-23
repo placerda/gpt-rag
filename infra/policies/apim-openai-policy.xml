@@ -1,0 +1,14 @@
+<policies>
+  <inbound>
+    <authentication-managed-identity resource="https://cognitiveservices.azure.com" output-token-variable-name="token" />
+    <set-header name="Authorization" exists-action="override">
+      <value>@('Bearer ' + context.Variables['token'])</value>
+    </set-header>
+    <base />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound><base /></outbound>
+  <on-error><base /></on-error>
+</policies>

@@ -1,33 +1,55 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -euo pipefail
 
-## Provides a head's up to user for AZURE_NETWORK_ISOLATION
+echo "🔧 Running post-provision steps…"
 
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Only apply RAI policies & seed App Configuration if CONFIGURE_RBAC is "true"
 
-resourceGroupName="$AZURE_RESOURCE_GROUP_NAME"
-subscriptionId="$AZURE_SUBSCRIPTION_ID"
-tenantId="$AZURE_TENANT_ID"
-
-# Creating a new RAI policy and attaching to deployed OpenAI model.
-aoaiResourceName="$AZURE_OPENAI_SERVICE_NAME"
-aoaiModelName="$AZURE_CHAT_GPT_DEPLOYMENT_NAME"
-
-# Extract values without jq
-deployDataIngestion=$(echo $AZURE_COMPONENT_CONFIG | grep -o '"deployDataIngestion":"[^"]*' | grep -o '[^"]*$')
-deployOrchestrator=$(echo $AZURE_COMPONENT_CONFIG | grep -o '"deployOrchestrator":"[^"]*' | grep -o '[^"]*$')
-
-# RAI script: AOAI content filters
-cd $PWD/scripts/rai
-./raipolicies.sh $tenantId $subscriptionId $resourceGroupName $aoaiResourceName $aoaiModelName "MainRAIpolicy" "MainBlockListPolicy"
-
-if [ "$AZURE_ZERO_TRUST" = "FALSE" ]; then
-    exit 0
+# 1) RAI policies
+if [[ "${AZURE_REUSE_AOAI,,}" != "true" ]]; then
+  echo "📑 Applying RAI policies…"
+  "$PWD/scripts/rai/raipolicies.sh" \
+    "$AZURE_TENANT_ID" \
+    "$AZURE_SUBSCRIPTION_ID" \
+    "$AZURE_RESOURCE_GROUP_NAME" \
+    "$AZURE_AI_SERVICES_NAME" \
+    "$AZURE_CHAT_DEPLOYMENT_NAME" \
+    "MainRAIpolicy" \
+    "MainBlockListPolicy"
+else
+  echo "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true')."
 fi
 
-echo "For accessing the ${YELLOW}Zero Trust infrastructure${NC}, from the Azure Portal:"
-echo "Virtual Machine: ${BLUE}$AZURE_VM_NAME${NC}"
-echo "Select connect using Bastion with:"
-echo "  username: $AZURE_VM_USER_NAME"
-echo "  Key Vault/Secret: ${BLUE}$AZURE_BASTION_KV_NAME${NC}/${BLUE}$AZURE_VM_KV_SEC_NAME${NC}"
+# 2) App Configuration
+if [[ "${CONFIGURE_RBAC,,}" == "true" ]]; then
+  echo "📑 Seeding App Configuration…"
+  "$PWD/scripts/appconfig/appconfig.sh" \
+    "$AZURE_RESOURCE_GROUP_NAME" \
+    "$AZURE_ENVIRONMENT_NAME" \
+    "$AZURE_APP_CONFIG_NAME"
+else
+  echo "⚠️  Skipping App Configuration (CONFIGURE_RBAC is not 'true')."
+fi
+# 3) AI Search Setup
+echo "AI Search setup…"
+"$PWD/scripts/search/setup.sh" \
+  "$AZURE_SUBSCRIPTION_ID" \
+  "$AZURE_RESOURCE_GROUP_NAME" \
+  "$AZURE_DATA_INGEST_CONTAINER_APP_NAME" \
+  "$AZURE_SEARCH_SERVICE_NAME" \
+  "$AZURE_SEARCH_API_VERSION" \
+  "$AZURE_SEARCH_INDEX_NAME" \
+  "$AZURE_APIM_SERVICE_NAME" \
+  "$AZURE_APIM_OPENAI_API_PATH" \
+  "$AZURE_OPENAI_API_VERSION"
+
+# 4) Zero Trust bastion
+if [[ "${NETWORK_ISOLATION,,}" == "true" ]]; then
+  echo
+  echo "🔒 Access the Zero Trust bastion:"
+  echo "  VM: $AZURE_VM_NAME"
+  echo "  User: $AZURE_VM_USER_NAME"
+  echo "  Credentials: $AZURE_BASTION_KV_NAME/$AZURE_VM_KV_SEC_NAME"
+fi
+
+echo "✅ postProvisioning completed."

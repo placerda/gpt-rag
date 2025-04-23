@@ -5,29 +5,17 @@ metadata:
   template: azure-gpt-rag
 services:
   dataIngest:
-    # Serviço de Ingestão de Dados é implementado como Function App.
     project: ./.azure/gpt-rag-ingestion
     language: python
-    host: function
-    hooks:
-      postdeploy:
-        posix:
-          run: scripts/postdeploy.sh
-          interactive: true
-        windows:
-          run: scripts/postdeploy.ps1
-          interactive: true
+    host: containerapp
   orchestrator:
-    # Serviço do Orquestrador implementado como Container App.
     project: ./.azure/gpt-rag-orchestrator
     language: python
     host: containerapp
   frontend:
-    # Serviço da Interface implementado como App Service.
     project: ./.azure/gpt-rag-frontend
     language: python
-    host: appservice
-
+    host: containerapp
 hooks:
   prepackage:
     posix:
