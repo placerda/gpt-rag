@@ -9,6 +9,7 @@ set -euo pipefail
 echo "🔧 Running post-provision steps…"
 
 # 1) RAI policies
+echo ""
 if [[ -n "${AZURE_REUSE_AOAI}" && "${AZURE_REUSE_AOAI,,}" != "true" ]]; then
   echo "📑 Applying RAI policies…"
   if ! "$PWD/scripts/rai/raipolicies.sh"; then
