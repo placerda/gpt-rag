@@ -3,11 +3,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 Write-Host "📦 Creating temporary venv…"
-python -m venv .venv_temp
+python -m venv .\scripts\search\.venv_temp
 
 Write-Host "🟢 Activating venv…"
 # On Windows PowerShell:
-& ".\.venv_temp\Scripts\Activate.ps1"
+& ".\scripts\search\.venv_temp\Scripts\Activate.ps1"
 
 Write-Host "⬇️  Installing requirements…"
 pip install --upgrade pip
@@ -23,6 +23,6 @@ if (Get-Command Deactivate -ErrorAction SilentlyContinue) {
 }
 
 # Remove the temporary virtual environment folder
-Remove-Item -Recurse -Force .venv_temp
+Remove-Item -Recurse -Force .\scripts\search\.venv_temp
 
 Write-Host "✅ Search setup complete."

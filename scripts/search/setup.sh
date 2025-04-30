@@ -2,8 +2,8 @@
 set -euo pipefail
 
 echo "📦 Creating temporary venv…"
-python3 -m venv .venv_temp
-source .venv_temp/bin/activate
+python -m venv scripts/search/.venv_temp
+source scripts/search/.venv_temp/bin/activate
 
 echo "⬇️  Installing requirements…"
 pip install --upgrade pip
@@ -14,6 +14,6 @@ python -m scripts.search.setup
 
 echo "🧹 Cleaning up…"
 deactivate
-rm -rf .venv_temp
+rm -rf scripts/search/.venv_temp
 
 echo "✅ Search setup complete."

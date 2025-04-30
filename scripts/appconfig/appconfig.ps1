@@ -2,49 +2,27 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-param(
-    [Parameter(Mandatory=$true)]
-    [string]$ResourceGroupName,
+# 1) Create and activate venv
+Write-Host "📦 Creating temporary venv…"
+python -m venv .venv_temp
 
-    [Parameter(Mandatory=$true)]
-    [string]$DeploymentName,
+Write-Host "🔓 Activating venv…"
+. "scripts/appconfig/.venv_temp/Scripts/Activate.ps1"
 
-    [Parameter(Mandatory=$true)]
-    [string]$StoreName
-)
+# 2) Install dependencies
+Write-Host "⬇️  Installing requirements…"
+python -m pip install --upgrade pip
+python -m pip install -r "scripts/appconfig/requirements.txt"
 
-Write-Host "⏳ Waiting for RBAC on '$StoreName'…"
-while (-not (az appconfig kv list `
-    --name $StoreName `
-    --resource-group $ResourceGroupName `
-    --top 1 2>$null)) {
-    Write-Host "   …waiting 10s"
-    Start-Sleep -Seconds 10
-}
-Write-Host "✅ RBAC effective."
+# 3) Run the Python seeder
+Write-Host "🚀 Running appconfig.py…"
+python -m scripts.appconfig.appconfig
 
-Write-Host "📥 Fetching key/value map from deployment '$DeploymentName'…"
-$kvsJson = az deployment group show `
-    --resource-group $ResourceGroupName `
-    --name $DeploymentName `
-    --query "properties.outputs.appConfigKVs.value" `
-    -o json
+# 4) Deactivate and clean up
+Write-Host "🧹 Deactivating venv…"
+deactivate
 
-# Parse into a PSCustomObject
-$kvs = $kvsJson | ConvertFrom-Json
-$entryCount = ($kvs.PSObject.Properties).Count
-Write-Host "➕ Seeding $entryCount entries…"
+Write-Host "🧹 Removing temporary venv…"
+Remove-Item -Recurse -Force "scripts/appconfig/.venv_temp"
 
-foreach ($prop in $kvs.PSObject.Properties) {
-    $key   = $prop.Name
-    $value = $prop.Value
-    Write-Host "  • $key = $value"
-    az appconfig kv set `
-        --name $StoreName `
-        --resource-group $ResourceGroupName `
-        --key $key `
-        --value $value `
-        --yes
-}
-
-Write-Host "🎉 App Configuration seeded."
+Write-Host "✅ App Configuration setup complete."

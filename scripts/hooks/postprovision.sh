@@ -10,14 +10,7 @@ exit 0 # Temporarily exit to avoid running the script
 # 1) RAI policies
 if [[ "${AZURE_REUSE_AOAI,,}" != "true" && "${AZURE_CONFIGURE_RAI_POLICIES,,}" == "true" ]]; then
   echo "📑 Applying RAI policies…"
-  "$PWD/scripts/rai/raipolicies.sh" \
-    "$AZURE_TENANT_ID" \
-    "$AZURE_SUBSCRIPTION_ID" \
-    "$AZURE_RESOURCE_GROUP" \
-    "$AZURE_AI_SERVICES_NAME" \
-    "$AZURE_CHAT_DEPLOYMENT_NAME" \
-    "MainRAIpolicy" \
-    "MainBlockListPolicy"
+  "$PWD/scripts/rai/raipolicies.sh"
 else
   echo "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true' or AZURE_CONFIGURE_RAI_POLICIES is not 'true')."
 fi
@@ -25,10 +18,7 @@ fi
 # 2) App Configuration
 if [[ "${CONFIGURE_RBAC,,}" == "true" ]]; then
   echo "📑 Seeding App Configuration…"
-  "$PWD/scripts/appconfig/appconfig.sh" \
-    "$AZURE_RESOURCE_GROUP" \
-    "$AZURE_DEPLOYMENT_NAME" \
-    "$AZURE_APP_CONFIG_NAME"
+  "$PWD/scripts/appconfig/appconfig.sh"
 else
   echo "⚠️  Skipping App Configuration (CONFIGURE_RBAC is not 'true')."
 fi
