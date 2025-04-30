@@ -1,27 +1,40 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# avoid unbound-variable errors by setting defaults
+: "${AZURE_REUSE_AOAI:=false}"
+: "${CONFIGURE_RBAC:=false}"
+: "${NETWORK_ISOLATION:=false}"
+
 echo "🔧 Running post-provision steps…"
 
 # 1) RAI policies
-if [[ "${AZURE_REUSE_AOAI,,}" != "true"]]; then
+if [[ -n "${AZURE_REUSE_AOAI}" && "${AZURE_REUSE_AOAI,,}" != "true" ]]; then
   echo "📑 Applying RAI policies…"
-  "$PWD/scripts/rai/raipolicies.sh"
+  if ! "$PWD/scripts/rai/raipolicies.sh"; then
+    echo "❗️ Error applying RAI policies. Continuing anyway…"
+  fi
 else
-  echo "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true')."
+  echo "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is either empty or 'true')."
 fi
 
 # 2) App Configuration
+echo ""
 if [[ "${CONFIGURE_RBAC,,}" == "true" ]]; then
   echo "📑 Seeding App Configuration…"
-  "$PWD/scripts/appconfig/appconfig.sh"
+  if ! "$PWD/scripts/appconfig/appconfig.sh"; then
+    echo "❗️ Error seeding App Configuration. Continuing anyway…"
+  fi
 else
   echo "⚠️  Skipping App Configuration (CONFIGURE_RBAC is not 'true')."
 fi
 
 # 3) AI Search Setup
-echo "AI Search setup…"
-"$PWD/scripts/search/setup.sh"
+echo ""
+echo "🔍 AI Search setup…"
+if ! "$PWD/scripts/search/setup.sh"; then
+  echo "❗️ Error setting up AI Search. Continuing anyway…"
+fi
 
 # 4) Zero Trust bastion
 if [[ "${NETWORK_ISOLATION,,}" == "true" ]]; then
