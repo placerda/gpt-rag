@@ -25,7 +25,7 @@ REQUIRED_ENV_VARS = [
     "AZURE_STORAGE_ACCOUNT_RG",
     "AZURE_STORAGE_ACCOUNT_NAME",
     "AZURE_STORAGE_CONTAINER",
-    "AZURE_KEY_VAULT_NAME",
+    "AZURE_KEY_VAULT_URI",
     "AZURE_APIM_GATEWAY_URL",
     "AZURE_APIM_OPENAI_API_PATH",
     "AZURE_OPENAI_API_VERSION",
@@ -47,14 +47,13 @@ def check_env_vars():
             logging.error("  • %s", name)
         sys.exit(1)
 
-def call_search_api(service, api_version, resource_type, name, method, credential, body=None):
+def call_search_api(service, search_endpoint, api_version, resource_type, name, method, credential, body=None):
     try:
         token = credential.get_token("https://search.azure.com/.default").token
         headers = {"Authorization": f"Bearer {token}"}
         if body is not None:
             headers["Content-Type"] = "application/json"
-
-        url = f"https://{service}.search.windows.net/{resource_type}/{name}?api-version={api_version}"
+        url = f"{search_endpoint}/{resource_type}/{name}?api-version={api_version}"
         resp = requests.request(method, url, headers=headers, json=body, timeout=30)
         if resp.status_code >= 400:
             logging.error(f"{method.upper()} {url} → {resp.status_code}: {resp.text}")
@@ -79,7 +78,7 @@ def get_container_fqdn(container_client, resource_group, container_name):
         logging.error("Failed to get container instance FQDN: %s", e)
         sys.exit(1)
 
-def create_datasource(service, api_version, index_name,
+def create_datasource(service, search_endpoint, api_version, index_name,
                       subscription_id, storage_rg, storage_account, container, credential):
     resource_id = (
         f"/subscriptions/{subscription_id}"
@@ -94,13 +93,13 @@ def create_datasource(service, api_version, index_name,
         "credentials": {"managedIdentityResourceId": resource_id},
         "container": {"name": container}
     }
-    call_search_api(service, api_version, "datasources", ds_name, "put", credential, body)
+    call_search_api(service, search_endpoint, api_version, "datasources", ds_name, "put", credential, body)
 
-def create_index(service, api_version, index_name, fields, credential):
-    call_search_api(service, api_version, "indexes", index_name, "delete", credential)
+def create_index(service, search_endpoint, api_version, index_name, fields, credential):
+    call_search_api(service, search_endpoint, api_version, "indexes", index_name, "delete", credential)
     time.sleep(1)
     body = {"name": index_name, "fields": fields}
-    call_search_api(service, api_version, "indexes", index_name, "put", credential, body)
+    call_search_api(service, search_endpoint, api_version, "indexes", index_name, "put", credential, body)
 
 def create_rag_skillset(service, api_version, index_name, container_fqdn, credential):
     ss_name = f"{index_name}-skillset-chunking"
@@ -122,7 +121,7 @@ def create_rag_skillset(service, api_version, index_name, container_fqdn, creden
         {"name": ss_name, "skills": [skill]}
     )
 
-def create_embedding_skillset(service, api_version, index_name,
+def create_embedding_skillset(service, search_endpoint, api_version, index_name,
                               openai_path, openai_version, credential, secret_client):
     gateway = os.environ["AZURE_APIM_GATEWAY_URL"].rstrip("/")
     secret_name = os.environ["AZURE_APIM_SUBSCRIPTION_SECRET_NAME"]
@@ -141,14 +140,14 @@ def create_embedding_skillset(service, api_version, index_name,
         "inputs": [{"name": "text", "source": "/document/content"}],
         "outputs": [{"name": "embedding", "targetName": "contentVector"}]
     }
-    call_search_api(service, api_version, "skillsets", ss_name, "delete", credential)
+    call_search_api(service, search_endpoint, api_version, "skillsets", ss_name, "delete", credential)
     time.sleep(1)
     call_search_api(
         service, api_version, "skillsets", ss_name, "put", credential,
         {"name": ss_name, "skills": [skill]}
     )
 
-def create_indexer(service, api_version, index_name, datasource, skillset, interval, credential):
+def create_indexer(service, search_endpoint, api_version, index_name, datasource, skillset, interval, credential):
     idx_name = f"{index_name}-indexer"
     body = {
         "name": idx_name,
@@ -157,7 +156,7 @@ def create_indexer(service, api_version, index_name, datasource, skillset, inter
         "skillsetName": skillset,
         "schedule": {"interval": interval}
     }
-    call_search_api(service, api_version, "indexers", idx_name, "put", credential, body)
+    call_search_api(service, search_endpoint, api_version, "indexers", idx_name, "put", credential, body)
 
 def main():
     check_env_vars()
@@ -175,9 +174,10 @@ def main():
     base_index = os.environ["AZURE_SEARCH_INDEX_NAME"]
     openai_path= os.environ["AZURE_APIM_OPENAI_API_PATH"]
     openai_ver = os.environ["AZURE_OPENAI_API_VERSION"]
+    vault_url  = os.environ["AZURE_KEY_VAULT_URI"]
+    search_endpoint = os.environ["AZURE_SEARCH_ENDPOINT"]
 
     # Key Vault client
-    vault_url     = f"https://{os.environ['AZURE_KEY_VAULT_NAME']}.vault.azure.net"
     secret_client = SecretClient(vault_url=vault_url, credential=credential)
 
     # Container Instance client
@@ -199,11 +199,11 @@ def main():
         {"name":"contentVector","type":"Collection(Edm.Single)",
          "searchable":True,"retrievable":True,"dimensions":embed_dim}
     ]
-    create_datasource(svc, api_ver, base_index, sub_id, storage_rg, storage_acc, storage_cont, credential)
-    create_index(svc, api_ver, base_index, rag_fields, credential)
-    create_rag_skillset(svc, api_ver, base_index, fqdn, credential)
+    create_datasource(svc, search_endpoint, api_ver, base_index, sub_id, storage_rg, storage_acc, storage_cont, credential)
+    create_index(svc, api_ver, search_endpoint, base_index, rag_fields, credential)
+    create_rag_skillset(svc, asearch_endpoint, pi_ver, base_index, fqdn, credential)
     create_indexer(
-        svc, api_ver, base_index,
+        svc, search_endpoint, api_ver, base_index,
         f"{base_index}-datasource",
         f"{base_index}-skillset-chunking",
         interval, credential
@@ -230,11 +230,11 @@ def main():
 
     for name, fields in nl2sql_defs.items():
         idx = f"{base_index}-{name}"
-        create_datasource(svc, api_ver, idx, sub_id, storage_rg, storage_acc, storage_cont, credential)
-        create_index(svc, api_ver, idx, fields, credential)
-        create_embedding_skillset(svc, api_ver, idx, openai_path, openai_ver, credential, secret_client)
+        create_datasource(svc, search_endpoint, api_ver, idx, sub_id, storage_rg, storage_acc, storage_cont, credential)
+        create_index(svc, search_endpoint, api_ver, idx, fields, credential)
+        create_embedding_skillset(svc, search_endpoint, api_ver, idx, openai_path, openai_ver, credential, secret_client)
         create_indexer(
-            svc, api_ver, idx,
+            svc, search_endpoint, api_ver, idx,
             f"{idx}-datasource",
             f"{idx}-skillset-embed",
             interval, credential

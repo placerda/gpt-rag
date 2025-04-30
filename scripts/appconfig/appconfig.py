@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 # List your required env vars here
 REQUIRED_ENV_VARS = [
+    "AZURE_CLOUD",
     "AZURE_SUBSCRIPTION_ID",
     "AZURE_RESOURCE_GROUP",
     "AZURE_DEPLOYMENT_NAME",
@@ -38,6 +39,7 @@ def main():
     check_env_vars()
 
     # 2) Grab them
+    environment  = os.environ["AZURE_CLOUD"]    
     sub_id       = os.environ["AZURE_SUBSCRIPTION_ID"]
     rg           = os.environ["AZURE_RESOURCE_GROUP"]
     deployment   = os.environ["AZURE_DEPLOYMENT_NAME"]
@@ -55,8 +57,18 @@ def main():
     kvs = props["appConfigKVs"]["value"]  # expected dict of key→value
 
     # 5) Connect to App Configuration
-    endpoint = f"https://{appconf_name}.azconfig.io"
-    client   = AzureAppConfigurationClient(endpoint, cred)
+    if environment == "AzureUSGovernment":
+        # US Government Cloud
+        suffix = "azconfig.azure.us"
+    elif environment == "AzureChinaCloud":
+        # China Cloud
+        suffix = "azconfig.cn"
+    else:
+        # Default (Public Cloud)
+        suffix = "azconfig.io"
+
+    endpoint = f"https://{appconf_name}.{suffix}"
+    client = AzureAppConfigurationClient(endpoint, cred)
 
     # 6) Seed each setting
     count = 0

@@ -5,10 +5,8 @@
     "environmentName":                         { "value": "${AZURE_ENV_NAME}" },
     "location":                                { "value": "${AZURE_LOCATION}" },
     "deploymentTags":                          { "value": {} },
-    "principalId":                             { "value": "${AZURE_PRINCIPAL_ID}" },
 
     "configureRBAC":                           { "value": "${AZURE_CONFIGURE_RBAC}" },
-    "configureRAIpolicies":                    { "value": "${AZURE_CONFIGURE_RAI_POLICIES}" },
     
     "AIFoundryHubReuse":                       { "value": "${AZURE_REUSE_AI_FOUNDRY_HUB}" },
     "existingAIFoundryHubResourceGroupName":   { "value": "${AZURE_EXISTING_AI_FOUNDRY_HUB_RESOURCE_GROUP}" },
@@ -57,7 +55,6 @@
     "apimSku":                                 { "value": "${AZURE_APIM_SKU}" },
     "AOAIAPIName":                             { "value": "${AZURE_APIM_OPENAI_API_NAME}" },
     "AOAIAPIDisplayName":                      { "value": "${AZURE_APIM_OPENAI_API_DISPLAY_NAME}" },
-    "AOAIAPISpecURL":                          { "value": "${AZURE_APIM_OPENAI_API_SPEC_URL}" },
     "AOAIAPIPath":                             { "value": "${AZURE_APIM_OPENAI_API_PATH}" },
     "AOAISubscriptionName":                    { "value": "${AZURE_APIM_OPENAI_SUBSCRIPTION_NAME}" },
     "AOAISubscriptionDescription":             { "value": "${AZURE_APIM_OPENAI_SUBSCRIPTION_DESC}" },    

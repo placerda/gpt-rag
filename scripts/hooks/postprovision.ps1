@@ -4,17 +4,13 @@ $ErrorActionPreference = 'Stop'
 
 Write-Host "🔧 Running post-provision steps…"
 
-# Temporarily exit to avoid running the script
-exit 0
-
-# 1) RAI policies (only if AZURE_REUSE_AOAI is not "true" and AZURE_CONFIGURE_RAI_POLICIES is "true")
-if ((-not ($Env:AZURE_REUSE_AOAI -and $Env:AZURE_REUSE_AOAI.ToLower() -eq 'true')) -and 
-    ($Env:AZURE_CONFIGURE_RAI_POLICIES -and $Env:AZURE_CONFIGURE_RAI_POLICIES.ToLower() -eq 'true')) {
+# 1) RAI policies (only if AZURE_REUSE_AOAI is not "true")
+if (-not (($Env:AZURE_REUSE_AOAI -and $Env:AZURE_REUSE_AOAI.ToLower() -eq 'true'))) {
     Write-Host "📑 Applying RAI policies…"
     & "$PSScriptRoot\scripts\rai\raipolicies.ps1" 
 }
 else {
-    Write-Host "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true' or AZURE_CONFIGURE_RAI_POLICIES is not 'true')."
+    Write-Host "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true')."
 }
 
 # 2) App Configuration (only if CONFIGURE_RBAC is "true")

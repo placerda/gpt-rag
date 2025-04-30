@@ -17,7 +17,6 @@ param location                             string        // Primary deployment l
 param deploymentTags                       object        // Tags applied to all resources.
 param principalId                          string        // Principal ID for role assignments.
 param configureRBAC                        string = ''   // Assign RBAC roles to resources.
-param configureRAIpolicies                 string = ''   // Configure content filtering policies for AOAI gpt model.
 
 // ----------------------------------------------------------------------
 // Reuse Parameters
@@ -79,7 +78,6 @@ param apimPublisherName                    string = ''
 param apimSku                              string = ''
 param AOAIAPIName                          string = ''
 param AOAIAPIDisplayName                   string = ''
-param AOAIAPISpecURL                       string = ''
 param AOAIAPIPath                          string = ''
 param AOAISubscriptionName                 string = ''
 param AOAISubscriptionDescription          string = ''
@@ -132,13 +130,13 @@ param chatNumTokens                        string = ''
 // General Variables
 // ----------------------------------------------------------------------
 var _resourceToken        = toLower(uniqueString(subscription().id, environmentName, location))
-var _tags                 = union({ env: _environmentName }, deploymentTags)
-var _environmentName      = empty(environmentName)           ? 'dev'           : environmentName
+var _tags                 = union({ env: _azureEnvironmentName }, deploymentTags)
+var _azureCloud           = environment().name
+var _azureEnvironmentName = empty(environmentName)           ? 'dev'           : environmentName
 var _location             = empty(location)                  ? 'eastus2'       : location
 var _principalId          = empty(principalId)               ? ''              : principalId
 var _configureRBAC        = (empty(configureRBAC) || toLower(configureRBAC) == 'true')
 var _dummyImageName       = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-var _configureRAIpolicies = (!empty(configureRAIpolicies) && toLower(configureRAIpolicies) == 'true')
 
 // ----------------------------------------------------------------------
 // Existing Resources Reuse Flags
@@ -202,7 +200,7 @@ var _storageAccountContainerImages  = empty(storageAccountContainerImages)  ? 'd
 var _AOAIAPIName                = empty(AOAIAPIName)                  ? 'openai'              : AOAIAPIName
 var _AOAIAPIPath                = empty(AOAIAPIPath)                  ? 'openai'              : AOAIAPIPath
 var _AOAIAPIDisplayName         = empty(AOAIAPIDisplayName)           ? 'OpenAI'              : AOAIAPIDisplayName
-var _AOAIAPISpecURL             = empty(AOAIAPISpecURL)               ? 'https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/stable/2024-02-01/inference.json' : AOAIAPISpecURL
+var _AOAIAPISpecURL             = 'https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/stable/2024-02-01/inference.json'
 var _AOAIAPIVersion             = empty(openAIAPIVersion)             ? '2024-10-21'          : openAIAPIVersion
 var _AOAISubscriptionSecretName = empty(AOAISubscriptionSecretName)   ? 'AOAISubscriptionKey' : AOAISubscriptionSecretName
 
@@ -538,7 +536,7 @@ module StorageAccountAIFoundry 'br/public:avm/res/storage/storage-account:0.19.0
 //////////////////////////////////////////////////////////////////////////
 
 // Azure AI Search Service
-module SearchService 'br/public:avm/res/search/search-service:0.9.2' =  {
+module SearchService 'br/public:avm/res/search/search-service:0.10.0' =  {
   name: 'SearchServiceModule'
   params: {
     name: _searchServiceName
@@ -811,9 +809,9 @@ module AIProject 'br/public:avm/res/machine-learning-services/workspace:0.9.1' =
           credentials: {
             key                         : APIMServiceOAISubscription.listSecrets().primaryKey
           }
-          useWorkspaceIdentity           : true
-          enforceAccessToDefaultSecretStores: true
-          isSharedToAll                  : false
+          // useWorkspaceIdentity           : false
+          // enforceAccessToDefaultSecretStores: true
+          // isSharedToAll                  : false
         }
         metadata: {
           ApiVersion                    : _AOAIAPIVersion
@@ -829,10 +827,10 @@ module AIProject 'br/public:avm/res/machine-learning-services/workspace:0.9.1' =
         target     : 'https://${AIServices.outputs.name}.cognitiveservices.azure.com'
         connectionProperties: {
           authType                       : 'AAD'
-          credentials                    : {}       // empty for AAD
-          useWorkspaceIdentity           : true
-          enforceAccessToDefaultSecretStores: true
-          isSharedToAll                  : false
+          // credentials                    : {}       // empty for AAD
+          // useWorkspaceIdentity           : true
+          // enforceAccessToDefaultSecretStores: true
+          // isSharedToAll                  : false
         }
         metadata: {
           Kind                          : 'CognitiveService'
@@ -846,10 +844,10 @@ module AIProject 'br/public:avm/res/machine-learning-services/workspace:0.9.1' =
         target     : 'https://${SearchService.outputs.name}.search.windows.net'
         connectionProperties: {
           authType                       : 'AAD'
-          credentials                    : {}
-          useWorkspaceIdentity           : true
-          enforceAccessToDefaultSecretStores: true
-          isSharedToAll                  : false
+          // credentials                    : {}
+          // useWorkspaceIdentity           : true
+          // enforceAccessToDefaultSecretStores: true
+          // isSharedToAll                  : false
         }
         metadata: {}                  // no extra metadata needed
       }
@@ -1169,14 +1167,13 @@ module grantPrincipalAiHubDeveloper 'core/security/role-assignment.bicep' = if (
 // Deployment Context
 // ============================================================================
 output AZURE_DEPLOYMENT_NAME                 string = deployment().name
+output AZURE_ENV_NAME                        string = _azureEnvironmentName
 output AZURE_LOCATION                        string = _location
 output AZURE_RESOURCE_GROUP                  string = resourceGroup().name
 output AZURE_SUBSCRIPTION_ID                 string = subscription().subscriptionId
 output AZURE_TENANT_ID                       string = tenant().tenantId
-output AZURE_ENV_NAME                        string = _environmentName
-output AZURE_PRINCIPAL_ID                    string = _principalId
+output AZURE_CLOUD                           string = _azureCloud
 output AZURE_CONFIGURE_RBAC                  string = string(_configureRBAC)
-output AZURE_CONFIGURE_RAI_POLICIES          string = string(_configureRAIpolicies)
 
 // ============================================================================
 // Container Apps
@@ -1229,12 +1226,8 @@ output AZURE_APIM_SERVICE_NAME                string = _reuseAPIM ? _existingAPI
 output AZURE_APIM_OPENAI_API_DISPLAY_NAME     string = _AOAIAPIDisplayName
 output AZURE_APIM_OPENAI_API_NAME             string = _AOAIAPIName
 output AZURE_APIM_OPENAI_API_PATH             string = _AOAIAPIPath
-
 output AZURE_APIM_PUBLISHER_EMAIL             string = _apimPublisherEmail
 output AZURE_APIM_PUBLISHER_NAME              string = _apimPublisherName
-
-output AZURE_APIM_OPENAI_API_SPEC_URL         string = _AOAIAPISpecURL
-
 output AZURE_APIM_GATEWAY_URL                 string = _apimGatewayUrl
 output AZURE_APIM_OPENAI_SUBSCRIPTION_NAME    string = _AOAISubscriptionName
 output AZURE_APIM_OPENAI_SUBSCRIPTION_DESC    string = _AOAISubscriptionDescription
@@ -1246,20 +1239,22 @@ output AZURE_APIM_SUBSCRIPTION_SECRET_NAME    string = _AOAISubscriptionSecretNa
 output AZURE_SEARCH_SERVICE_NAME             string = SearchService.outputs.name
 output AZURE_SEARCH_INDEX_NAME               string = _searchIndexName
 output AZURE_SEARCH_API_VERSION              string = _searchAPIVersion
+output AZURE_SEARCH_ENDPOINT                 string = SearchService.outputs.endpoint
 
 // ============================================================================
 // Storage
 // ============================================================================
-output AZURE_STORAGE_ACCOUNT_NAME            string = _solutionStorageAccountName
-output AZURE_STORAGE_ACCOUNT_CONTAINER_DOCS  string = _storageAccountContainerDocs
+output AZURE_STORAGE_ACCOUNT_NAME             string = _solutionStorageAccountName
+output AZURE_STORAGE_ACCOUNT_CONTAINER_DOCS   string = _storageAccountContainerDocs
 output AZURE_STORAGE_ACCOUNT_CONTAINER_IMAGES string = _storageAccountContainerImages
-output AZURE_CONTAINER_REGISTRY_NAME         string = ContainerRegistry.outputs.name
+output AZURE_CONTAINER_REGISTRY_NAME          string = ContainerRegistry.outputs.name
 
 // ============================================================================
 // Key Vault
 // ============================================================================
 output AZURE_KEY_VAULT_NAME                 string = KeyVault.outputs.name
 output AZURE_AOAI_SUBSCRIPTION_SECRET_NAME  string = _AOAISubscriptionSecretName
+output AZURE_KEY_VAULT_URI                  string = KeyVault.outputs.uri
 
 // ============================================================================
 // Reuse Flags and Existing Resource Info
@@ -1292,9 +1287,9 @@ output appConfigKVs object = {
   DATABASE_NAME                       : _dbDatabaseName
   DATA_INGEST_CONTAINER_APP_NAME      : _dataIngestContainerAppName
   DOC_INTELLIGENCE_API_VERSION        : _docIntelAPIVersion
-  ENV_NAME                            : _environmentName
+  AZURE_ENV_NAME                      : _azureEnvironmentName
   FRONTEND_CONTAINER_APP_NAME         : _frontEndContainerAppName
-  KEY_VAULT_NAME                      : _keyVaultName
+  AZURE_KEY_VAULT_URI                 : KeyVault.outputs.uri    
   LOCATION                            : _location
   OPENAI_API_VERSION                  : _AOAIAPIVersion
   OPENAI_CHAT_DEPLOYMENT              : _chatDeploymentName

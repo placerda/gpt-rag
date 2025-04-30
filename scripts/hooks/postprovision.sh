@@ -3,16 +3,12 @@ set -euo pipefail
 
 echo "🔧 Running post-provision steps…"
 
-exit 0 # Temporarily exit to avoid running the script
-
-# Only apply RAI policies & seed App Configuration if CONFIGURE_RBAC is "true"
-
 # 1) RAI policies
-if [[ "${AZURE_REUSE_AOAI,,}" != "true" && "${AZURE_CONFIGURE_RAI_POLICIES,,}" == "true" ]]; then
+if [[ "${AZURE_REUSE_AOAI,,}" != "true"]]; then
   echo "📑 Applying RAI policies…"
   "$PWD/scripts/rai/raipolicies.sh"
 else
-  echo "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true' or AZURE_CONFIGURE_RAI_POLICIES is not 'true')."
+  echo "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true')."
 fi
 
 # 2) App Configuration
