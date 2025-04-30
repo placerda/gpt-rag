@@ -9,7 +9,9 @@ Write-Host "🔧 Running post-provision steps…"
 $baseDir = Split-Path -Parent $PSScriptRoot
 
 # 1) RAI policies
-if ($Env:AZURE_REUSE_AOAI -and $Env:AZURE_REUSE_AOAI.ToLower() -ne 'true') {
+Write-Host ""
+# if ($Env:AZURE_REUSE_AOAI -and $Env:AZURE_REUSE_AOAI.ToLower() -ne 'true') {
+if ('true' -eq 'true') {
     Write-Host "📑 Applying RAI policies…"
     try {
         & "$baseDir\rai\raipolicies.ps1" -Verbose
@@ -26,7 +28,8 @@ else {
 }
 
 # 2) App Configuration
-if ($Env:CONFIGURE_RBAC -and $Env:CONFIGURE_RBAC.ToLower() -eq 'true') {
+# if ($Env:CONFIGURE_RBAC -and $Env:CONFIGURE_RBAC.ToLower() -eq 'true') {
+if ('true' -eq 'true') {
     Write-Host ""
     Write-Host "📑 Seeding App Configuration…"
     try {
