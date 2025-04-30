@@ -61,7 +61,7 @@
     "AOAIAPIPath":                             { "value": "${AZURE_APIM_OPENAI_API_PATH}" },
     "AOAISubscriptionName":                    { "value": "${AZURE_APIM_OPENAI_SUBSCRIPTION_NAME}" },
     "AOAISubscriptionDescription":             { "value": "${AZURE_APIM_OPENAI_SUBSCRIPTION_DESC}" },    
-    "AOAISubscriptionDescription":             { "value": "${AZURE_APIM_SUBSCRIPTION_SECRET_NAME}" },    
+    "AOAISubscriptionSecretName":              { "value": "${AZURE_APIM_SUBSCRIPTION_SECRET_NAME}" },    
 
     
     "docIntelAPIVersion":                      { "value": "${AZURE_DOC_INTELLIGENCE_API_VERSION}" },

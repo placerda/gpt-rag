@@ -11,7 +11,7 @@ Write-Host "🟢 Activating venv…"
 
 Write-Host "⬇️  Installing requirements…"
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r ".\scripts\search\requirements.txt" 
 
 Write-Host "🚀 Running setup.py…"
 python -m scripts.search.setup
