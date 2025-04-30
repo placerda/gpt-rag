@@ -43,6 +43,9 @@ if [[ "${NETWORK_ISOLATION,,}" == "true" ]]; then
   echo "  VM: $AZURE_VM_NAME"
   echo "  User: $AZURE_VM_USER_NAME"
   echo "  Credentials: $AZURE_BASTION_KV_NAME/$AZURE_VM_KV_SEC_NAME"
+else
+  echo
+  echo "🚧 Zero Trust not enabled; provisioning Standard architecture."
 fi
 
 echo "✅ postProvisioning completed."

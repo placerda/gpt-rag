@@ -52,5 +52,10 @@ if ($Env:NETWORK_ISOLATION -and $Env:NETWORK_ISOLATION.ToLower() -eq 'true') {
     Write-Host "  User:        $($Env:AZURE_VM_USER_NAME)"
     Write-Host "  Credentials: $($Env:AZURE_BASTION_KV_NAME)/$($Env:AZURE_VM_KV_SEC_NAME)"
 }
+else {
+    Write-Host ""
+    Write-Host "🚧 Zero Trust not enabled; provisioning Standard architecture."
+}
+
 
 Write-Host "✅ postProvisioning completed."
