@@ -26,4 +26,4 @@ deactivate
 Write-Host "🧹 Removing temporary venv…"
 Remove-Item -Recurse -Force "scripts/rai/.venv_temp"
 
-Write-Host "✅ RAI policies applied."
+Write-Host "✅ RAI script finished."

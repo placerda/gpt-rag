@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 
 # 1) Create and activate venv
 Write-Host "📦 Creating temporary venv…"
-python -m venv .venv_temp
+python -m venv "scripts/appconfig/.venv_temp"
 
 Write-Host "🔓 Activating venv…"
 . "scripts/appconfig/.venv_temp/Scripts/Activate.ps1"
@@ -25,4 +25,4 @@ deactivate
 Write-Host "🧹 Removing temporary venv…"
 Remove-Item -Recurse -Force "scripts/appconfig/.venv_temp"
 
-Write-Host "✅ App Configuration setup complete."
+Write-Host "✅ App Configuration script finished."

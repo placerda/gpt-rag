@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 Write-Host "📦 Creating temporary venv…"
-python -m venv .\scripts\search\.venv_temp
+python -m venv "scripts/search/.venv_temp"
 
 Write-Host "🟢 Activating venv…"
 # On Windows PowerShell:
@@ -25,4 +25,4 @@ if (Get-Command Deactivate -ErrorAction SilentlyContinue) {
 # Remove the temporary virtual environment folder
 Remove-Item -Recurse -Force .\scripts\search\.venv_temp
 
-Write-Host "✅ Search setup complete."
+Write-Host "✅ Search setup script finished."

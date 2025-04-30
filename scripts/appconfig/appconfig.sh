@@ -16,4 +16,4 @@ echo "🧹 Cleaning up…"
 deactivate
 rm -rf scripts/appconfig/.venv_temp
 
-echo "✅ App Configuration setup complete."
+echo "✅ App Configuration script finished."

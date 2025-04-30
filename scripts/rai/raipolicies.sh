@@ -17,4 +17,4 @@ echo "🧹 Cleaning up…"
 deactivate
 rm -rf scripts/rai/.venv_temp
 
-echo "✅ RAI policies applied."
+echo "✅ RAI policies script finished."

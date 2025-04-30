@@ -16,4 +16,4 @@ echo "🧹 Cleaning up…"
 deactivate
 rm -rf scripts/search/.venv_temp
 
-echo "✅ Search setup complete."
+echo "✅ Search setup script finished."
