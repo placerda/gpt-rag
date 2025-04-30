@@ -1,16 +1,55 @@
 #!/usr/bin/env python3
-# scripts/search/setup.py
-
 import os
+import sys
 import time
 import logging
-import argparse
 import requests
 import subprocess
-from azure.identity import ManagedIdentityCredential, AzureCliCredential, ChainedTokenCredential
+
+from azure.identity import (
+    ManagedIdentityCredential,
+    AzureCliCredential,
+    ChainedTokenCredential
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
+# These must all be set in the environment
+REQUIRED_ENV_VARS = [
+    "AZURE_SUBSCRIPTION_ID",
+    "AZURE_RESOURCE_GROUP",
+    "AZURE_DATA_INGEST_CONTAINER_APP_NAME",
+    "AZURE_SEARCH_SERVICE_NAME",
+    "AZURE_SEARCH_API_VERSION",
+    "AZURE_SEARCH_INDEX_NAME",
+    "AZURE_APIM_SERVICE_NAME",
+    "AZURE_APIM_OPENAI_API_PATH",
+    "AZURE_OPENAI_API_VERSION",
+    "AZURE_STORAGE_ACCOUNT_RG",
+    "AZURE_STORAGE_ACCOUNT_NAME",
+    "AZURE_STORAGE_CONTAINER",
+    "AZURE_KEY_VAULT_NAME",
+    "AZURE_APIM_SUBSCRIPTION_SECRET_NAME",
+    "AZURE_APIM_GATEWAY_URL",
+    "AZURE_OPENAI_EMBEDDING_DEPLOYMENT",
+    "AZURE_OPENAI_EMBEDDING_MODEL_NAME",
+    "AZURE_EMBEDDINGS_VECTOR_SIZE"
+]
+
+def check_env_vars():
+    # 1) Preamble: list every required env-var
+    logging.info("The following environment variables are required:")
+    for name in REQUIRED_ENV_VARS:
+        logging.info("  • %s", name)
+
+    # 2) Check which ones are actually missing
+    missing = [v for v in REQUIRED_ENV_VARS if not os.environ.get(v)]
+    if missing:
+        logging.error("")  # blank line for separation
+        logging.error("Missing environment variables:")
+        for name in missing:
+            logging.error("  • %s", name)
+        sys.exit(1)
 
 def call_search_api(service, api_version, resource_type, name, method, credential, body=None):
     token = credential.get_token("https://search.azure.com/.default").token
@@ -26,7 +65,6 @@ def call_search_api(service, api_version, resource_type, name, method, credentia
         logging.info(f"{method.upper()} {url} → {resp.status_code}")
     return resp
 
-
 def get_containerapp_fqdn(resource_group, container_app):
     cmd = [
         "az", "containerapp", "show",
@@ -36,7 +74,6 @@ def get_containerapp_fqdn(resource_group, container_app):
         "-o", "tsv"
     ]
     return subprocess.check_output(cmd, text=True).strip()
-
 
 def create_datasource(search_service, api_version, index_name,
                       subscription_id, storage_rg, storage_account, container, cred):
@@ -55,14 +92,11 @@ def create_datasource(search_service, api_version, index_name,
     }
     call_search_api(search_service, api_version, "datasources", ds, "put", cred, body)
 
-
 def create_index(search_service, api_version, index_name, fields, cred):
-    # delete then put
     call_search_api(search_service, api_version, "indexes", index_name, "delete", cred)
     time.sleep(1)
     body = {"name": index_name, "fields": fields}
     call_search_api(search_service, api_version, "indexes", index_name, "put", cred, body)
-
 
 def create_rag_skillset(search_service, api_version, index_name,
                         container_fqdn, apim_service, cred):
@@ -72,36 +106,40 @@ def create_rag_skillset(search_service, api_version, index_name,
         "name": "document-chunking",
         "httpMethod": "POST",
         "uri": f"https://{container_fqdn}/document-chunking",
-        "authResourceId": f"api://{apim_service}",
         "timeout": "PT230S",
+        "batchSize": 1,
+        "context": "/document",
         "inputs": [{"name": "documentUrl", "source": "/document/metadata_storage_path"}],
         "outputs": [{"name": "chunks", "targetName": "chunks"}]
     }
-    body = {"name": ss, "skills": [skill]}
     call_search_api(search_service, api_version, "skillsets", ss, "delete", cred)
     time.sleep(1)
-    call_search_api(search_service, api_version, "skillsets", ss, "put", cred, body)
-
+    call_search_api(search_service, api_version, "skillsets", ss, "put", cred, {"name": ss, "skills": [skill]})
 
 def create_embedding_skillset(search_service, api_version, index_name,
                               apim_service, openai_path, openai_version, cred):
+    apim_key = subprocess.check_output([
+        "az", "keyvault", "secret", "show",
+        "--vault-name", os.environ["AZURE_KEY_VAULT_NAME"],
+        "--name", os.environ["AZURE_APIM_SUBSCRIPTION_SECRET_NAME"],
+        "--query", "value", "-o", "tsv"
+    ], text=True).strip()
+
     ss = f"{index_name}-skillset-embed"
     skill = {
         "@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill",
         "name": "embedding-skill",
-        "description": f"Generate embeddings for {index_name}",
-        "uri": f"https://{apim_service}.azure-api.net/{openai_path}/embeddings?api-version={openai_version}",
-        "httpHeaders": {
-            "Ocp-Apim-Subscription-Key": os.environ["AZURE_APIM_SUBSCRIPTION_KEY"]
-        },
+        "description": f"Generate embeddings for {index_name} via APIM",
+        "resourceUri": f"{os.environ['AZURE_APIM_GATEWAY_URL']}/{openai_path}",
+        "apiKey": apim_key,
+        "deploymentId": os.environ["AZURE_OPENAI_EMBEDDING_DEPLOYMENT"],
+        "modelName": os.environ["AZURE_OPENAI_EMBEDDING_MODEL_NAME"],
+        "dimensions": int(os.environ["AZURE_EMBEDDINGS_VECTOR_SIZE"]),
         "inputs": [{"name": "text", "source": "/document/content"}],
         "outputs": [{"name": "embedding", "targetName": "contentVector"}]
     }
-    body = {"name": ss, "skills": [skill]}
     call_search_api(search_service, api_version, "skillsets", ss, "delete", cred)
-    time.sleep(1)
-    call_search_api(search_service, api_version, "skillsets", ss, "put", cred, body)
-
+    call_search_api(search_service, api_version, "skillsets", ss, "put", cred, {"name": ss, "skills": [skill]})
 
 def create_indexer(search_service, api_version, index_name, datasource_name,
                    skillset_name, schedule_interval, cred):
@@ -115,37 +153,31 @@ def create_indexer(search_service, api_version, index_name, datasource_name,
     }
     call_search_api(search_service, api_version, "indexers", idxr, "put", cred, body)
 
-
 def main():
-    p = argparse.ArgumentParser(
-        description="Setup four AI Search indices + skillsets + indexers"
-    )
-    p.add_argument("--subscription-id",    required=True)
-    p.add_argument("--resource-group",     required=True)
-    p.add_argument("--container-app-name", required=True)
-    p.add_argument("--search-service",     required=True)
-    p.add_argument("--search-api-version", required=True)
-    p.add_argument("--search-index",       required=True,
-                   help="Base RAG index name (e.g. 'ragindex')")
-    p.add_argument("--apim-service",       required=True)
-    p.add_argument("--openai-path",        required=True)
-    p.add_argument("--openai-version",     required=True)
-    args = p.parse_args()
+    check_env_vars()
 
     cred = ChainedTokenCredential(ManagedIdentityCredential(), AzureCliCredential())
 
-    fqdn = get_containerapp_fqdn(args.resource_group, args.container_app_name)
-    logging.info(f"Data‑ingest Container App FQDN: {fqdn}")
+    subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
+    resource_group = os.environ["AZURE_RESOURCE_GROUP"]
+    container_app = os.environ["AZURE_DATA_INGEST_CONTAINER_APP_NAME"]
+    search_service = os.environ["AZURE_SEARCH_SERVICE_NAME"]
+    search_api_version = os.environ["AZURE_SEARCH_API_VERSION"]
+    base_index = os.environ["AZURE_SEARCH_INDEX_NAME"]
+    apim_service = os.environ["AZURE_APIM_SERVICE_NAME"]
+    openai_path = os.environ["AZURE_APIM_OPENAI_API_PATH"]
+    openai_version = os.environ["AZURE_OPENAI_API_VERSION"]
 
-    # environment settings
-    storage_rg      = os.environ["AZURE_STORAGE_ACCOUNT_RG"]
+    fqdn = get_containerapp_fqdn(resource_group, container_app)
+    logging.info(f"Data-ingest Container App FQDN: {fqdn}")
+
+    storage_rg = os.environ["AZURE_STORAGE_ACCOUNT_RG"]
     storage_account = os.environ["AZURE_STORAGE_ACCOUNT_NAME"]
-    storage_cont    = os.environ["AZURE_STORAGE_CONTAINER"]
-    analyzer        = os.environ.get("SEARCH_ANALYZER_NAME", "standard.lucene")
-    interval        = os.environ.get("SEARCH_INDEX_INTERVAL", "PT2H")
-    embed_dim       = int(os.environ["AZURE_EMBEDDINGS_VECTOR_SIZE"])
+    storage_cont = os.environ["AZURE_STORAGE_CONTAINER"]
+    analyzer = os.environ.get("SEARCH_ANALYZER_NAME", "standard.lucene")
+    interval = os.environ.get("SEARCH_INDEX_INTERVAL", "PT2H")
+    embed_dim = int(os.environ["AZURE_EMBEDDINGS_VECTOR_SIZE"])
 
-    base = args.search_index
     # 1) RAG index
     rag_fields = [
         {"name":"id","type":"Edm.String","key":True,"searchable":False},
@@ -153,14 +185,14 @@ def main():
         {"name":"contentVector","type":"Collection(Edm.Single)",
          "searchable":True,"retrievable":True,"dimensions":embed_dim}
     ]
-    create_datasource(args.search_service, args.search_api_version,
-                      base, args.subscription_id,
+    create_datasource(search_service, search_api_version,
+                      base_index, subscription_id,
                       storage_rg, storage_account, storage_cont, cred)
-    create_index(args.search_service, args.search_api_version, base, rag_fields, cred)
-    create_rag_skillset(args.search_service, args.search_api_version,
-                        base, fqdn, args.apim_service, cred)
-    create_indexer(args.search_service, args.search_api_version,
-                   base, f"{base}-datasource", f"{base}-skillset-chunking",
+    create_index(search_service, search_api_version, base_index, rag_fields, cred)
+    create_rag_skillset(search_service, search_api_version,
+                        base_index, fqdn, apim_service, cred)
+    create_indexer(search_service, search_api_version,
+                   base_index, f"{base_index}-datasource", f"{base_index}-skillset-chunking",
                    interval, cred)
 
     # 2) NL2SQL indices
@@ -181,16 +213,19 @@ def main():
             {"name":"contentVector","type":"Collection(Edm.Single)","searchable":True,"dimensions":embed_dim}
         ],
     }.items():
-        idx = f"{base}-{name}"
-        create_datasource(args.search_service, args.search_api_version,
-                          idx, args.subscription_id,
+        idx = f"{base_index}-{name}"
+        create_datasource(search_service, search_api_version,
+                          idx, subscription_id,
                           storage_rg, storage_account, storage_cont, cred)
-        create_index(args.search_service, args.search_api_version, idx, fields, cred)
-        create_embedding_skillset(args.search_service, args.search_api_version,
-                                 idx, args.apim_service,
-                                 args.openai_path, args.openai_version, cred)
-        create_indexer(args.search_service, args.search_api_version,
+        create_index(search_service, search_api_version, idx, fields, cred)
+        create_embedding_skillset(search_service, search_api_version,
+                                 idx, apim_service,
+                                 openai_path, openai_version, cred)
+        create_indexer(search_service, search_api_version,
                        idx, f"{idx}-datasource", f"{idx}-skillset-embed",
                        interval, cred)
 
-    logging.info("✅ All four indices + skillsets + indexers created.")
+    logging.info("✅ All indices, skillsets, and indexers created.")
+
+if __name__ == "__main__":
+    main()

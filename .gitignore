@@ -1,7 +1,9 @@
 .azure
 .devcontainer
+.local/
 local/
 results/
+.venv_temp
 **azdoenv.json
 **federated_id.json
 **service_connection.json

@@ -4,28 +4,32 @@ $ErrorActionPreference = 'Stop'
 
 Write-Host "🔧 Running post-provision steps…"
 
-# 1) RAI policies (only if AZURE_REUSE_AOAI is not "true")
-if (-not ($Env:AZURE_REUSE_AOAI -and $Env:AZURE_REUSE_AOAI.ToLower() -eq 'true')) {
+# Temporarily exit to avoid running the script
+exit 0
+
+# 1) RAI policies (only if AZURE_REUSE_AOAI is not "true" and AZURE_CONFIGURE_RAI_POLICIES is "true")
+if ((-not ($Env:AZURE_REUSE_AOAI -and $Env:AZURE_REUSE_AOAI.ToLower() -eq 'true')) -and 
+    ($Env:AZURE_CONFIGURE_RAI_POLICIES -and $Env:AZURE_CONFIGURE_RAI_POLICIES.ToLower() -eq 'true')) {
     Write-Host "📑 Applying RAI policies…"
     & "$PSScriptRoot\scripts\rai\raipolicies.ps1" `
         -TenantId            $Env:AZURE_TENANT_ID `
         -SubscriptionId      $Env:AZURE_SUBSCRIPTION_ID `
-        -ResourceGroupName   $Env:AZURE_RESOURCE_GROUP_NAME `
+        -ResourceGroupName   $Env:AZURE_RESOURCE_GROUP `
         -AIServiceName       $Env:AZURE_AI_SERVICES_NAME `
         -ChatDeploymentName  $Env:AZURE_CHAT_DEPLOYMENT_NAME `
         -PolicyName          'MainRAIpolicy' `
         -BlockListPolicyName 'MainBlockListPolicy'
 }
 else {
-    Write-Host "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true')."
+    Write-Host "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is 'true' or AZURE_CONFIGURE_RAI_POLICIES is not 'true')."
 }
 
 # 2) App Configuration (only if CONFIGURE_RBAC is "true")
 if ($Env:CONFIGURE_RBAC -and $Env:CONFIGURE_RBAC.ToLower() -eq 'true') {
     Write-Host "📑 Seeding App Configuration…"
     & "$PSScriptRoot\scripts\appconfig\appconfig.ps1" `
-        -ResourceGroupName $Env:AZURE_RESOURCE_GROUP_NAME `
-        -DeploymentName    $Env:AZURE_ENVIRONMENT_NAME `
+        -ResourceGroupName $Env:AZURE_RESOURCE_GROUP `
+        -DeploymentName    $Env:AZURE_DEPLOYMENT_NAME `
         -StoreName         $Env:AZURE_APP_CONFIG_NAME
 }
 else {
@@ -36,7 +40,7 @@ else {
 Write-Host "AI Search setup…"
 & "$PSScriptRoot\scripts\search\setup.ps1" `
     -SubscriptionId    $Env:AZURE_SUBSCRIPTION_ID `
-    -ResourceGroupName $Env:AZURE_RESOURCE_GROUP_NAME `
+    -ResourceGroupName $Env:AZURE_RESOURCE_GROUP `
     -ContainerAppName  $Env:AZURE_DATA_INGEST_CONTAINER_APP_NAME `
     -SearchServiceName $Env:AZURE_SEARCH_SERVICE_NAME `
     -SearchApiVersion  $Env:AZURE_SEARCH_API_VERSION `

@@ -1,62 +1,80 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
-
 name: azure-gpt-rag
 metadata:
   template: azure-gpt-rag
+infra:
+  provider: bicep
+  path: infra
+  module: main  
 services:
   dataIngest:
     project: ./.azure/gpt-rag-ingestion
     language: python
     host: containerapp
+    remoteBuild: true
+    # build:
+    #   docker:
+    #     path: ./.azure/gpt-rag-ingestion
+    #     dockerfile: Dockerfile    
   orchestrator:
     project: ./.azure/gpt-rag-orchestrator
     language: python
     host: containerapp
+    remoteBuild: true    
+    # build:
+    #   docker:
+    #     path: ./.azure/gpt-rag-orchestrator
+    #     dockerfile: Dockerfile    
   frontend:
     project: ./.azure/gpt-rag-frontend
     language: python
     host: containerapp
+    remoteBuild: true    
+    # build:
+    #   docker:
+    #     path: ./.azure/gpt-rag-frontend
+    #     dockerfile: Dockerfile    
 hooks:
   prepackage:
     posix:
-      run: scripts/fetchComponents.sh
+      run: scripts/hooks/fetchComponents.sh
       interactive: false
     windows:
-      run: scripts/fetchComponents.ps1
+      run: scripts/hooks/fetchComponents.ps1
       interactive: false
   preprovision:
     posix:
       shell: sh
-      run: scripts/preprovision.sh
+      run: scripts/hooks/preprovision.sh
       interactive: true
     windows:
       shell: pwsh
-      run: scripts/preprovision.ps1
+      run: scripts/hooks/preprovision.ps1
       interactive: true
   postprovision:
     posix:
       shell: sh
-      run: scripts/postprovision.sh
+      run: scripts/hooks/postprovision.sh
       interactive: true
     windows:
       shell: pwsh
-      run: scripts/postprovision.ps1
+      run: scripts/hooks/postprovision.ps1
       interactive: true
   predeploy:
     posix:
       shell: sh
-      run: scripts/preDeploy.sh; scripts/fetchComponents.sh
+      run: scripts/hooks/preDeploy.sh; scripts/hooks/fetchComponents.sh
       interactive: true
     windows:
       shell: pwsh
-      run: scripts/preDeploy.ps1; scripts/fetchComponents.ps1
+      run: scripts/hooks/preDeploy.ps1; scripts/hooks/fetchComponents.ps1
       interactive: true
   postdeploy:
     posix:
       shell: sh
-      run: scripts/cleanComponents.sh
+      run: scripts/hooks/cleanComponents.sh
       interactive: false
     windows:
       shell: pwsh
-      run: scripts/cleanComponents.ps1
+      run: scripts/hooks/cleanComponents.ps1
       interactive: false
