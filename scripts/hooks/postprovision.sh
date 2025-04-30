@@ -48,4 +48,5 @@ else
   echo "🚧 Zero Trust not enabled; provisioning Standard architecture."
 fi
 
+echo ""
 echo "✅ postProvisioning completed."
