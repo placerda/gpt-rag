@@ -5,17 +5,19 @@ $ErrorActionPreference = 'Stop'
 
 Write-Host "🔧 Running post-provision steps…"
 
-# 1) RAI policies (only if AZURE_REUSE_AOAI is set and not "true")
+# Base “scripts” folder (one level up from hooks)
+$baseDir = Split-Path -Parent $PSScriptRoot
+
+# 1) RAI policies
 if ($Env:AZURE_REUSE_AOAI -and $Env:AZURE_REUSE_AOAI.ToLower() -ne 'true') {
     Write-Host "📑 Applying RAI policies…"
     try {
-        & "$PSScriptRoot\scripts\rai\raipolicies.ps1" -Verbose
+        & "$baseDir\rai\raipolicies.ps1" -Verbose
     }
     catch {
-        Write-Error "❗️ Error applying RAI policies:"
-        Write-Error "  Message: $($_.Exception.Message)"
-        Write-Error "  StackTrace: $($_.Exception.StackTrace)"
-        Write-Error "  Full Error Record:`n$($_ | Out-String)"
+        Write-Host "❗️ Error applying RAI policies:"
+        Write-Host "  Message: $($_.Exception.Message)"
+        Write-Host "  Stack:   $($_.Exception.StackTrace)"
         Write-Warning "Continuing post-provisioning despite RAI errors…"
     }
 }
@@ -23,18 +25,17 @@ else {
     Write-Host "⚠️  Skipping RAI policies (AZURE_REUSE_AOAI is either unset or 'true')."
 }
 
-# 2) App Configuration (only if CONFIGURE_RBAC is "true")
+# 2) App Configuration
 if ($Env:CONFIGURE_RBAC -and $Env:CONFIGURE_RBAC.ToLower() -eq 'true') {
     Write-Host ""
     Write-Host "📑 Seeding App Configuration…"
     try {
-        & "$PSScriptRoot\scripts\appconfig\appconfig.ps1" -Verbose
+        & "$baseDir\appconfig\appconfig.ps1" -Verbose
     }
     catch {
-        Write-Error "❗️ Error seeding App Configuration:"
-        Write-Error "  Message: $($_.Exception.Message)"
-        Write-Error "  StackTrace: $($_.Exception.StackTrace)"
-        Write-Error "  Full Error Record:`n$($_ | Out-String)"
+        Write-Host "❗️ Error seeding App Configuration:"
+        Write-Host "  Message: $($_.Exception.Message)"
+        Write-Host "  Stack:   $($_.Exception.StackTrace)"
         Write-Warning "Continuing post-provisioning despite AppConfig errors…"
     }
 }
@@ -43,21 +44,20 @@ else {
     Write-Host "⚠️  Skipping App Configuration (CONFIGURE_RBAC is not 'true')."
 }
 
-# 3) AI Search Setup (always run)
+# 3) AI Search Setup
 Write-Host ""
 Write-Host "🔍 AI Search setup…"
 try {
-    & "$PSScriptRoot\scripts\search\setup.ps1" -Verbose
+    & "$baseDir\search\setup.ps1" -Verbose
 }
 catch {
-    Write-Error "❗️ Error setting up AI Search:"
-    Write-Error "  Message: $($_.Exception.Message)"
-    Write-Error "  StackTrace: $($_.Exception.StackTrace)"
-    Write-Error "  Full Error Record:`n$($_ | Out-String)"
+    Write-Host "❗️ Error setting up AI Search:"
+    Write-Host "  Message: $($_.Exception.Message)"
+    Write-Host "  Stack:   $($_.Exception.StackTrace)"
     Write-Warning "Continuing post-provisioning despite Search setup errors…"
 }
 
-# 4) Zero Trust bastion info (if NETWORK_ISOLATION is "true")
+# 4) Zero Trust bastion info
 if ($Env:NETWORK_ISOLATION -and $Env:NETWORK_ISOLATION.ToLower() -eq 'true') {
     Write-Host ""
     Write-Host "🔒 Access the Zero Trust bastion:"
