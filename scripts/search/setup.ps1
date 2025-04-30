@@ -12,10 +12,9 @@ if (Test-Path $venvPath) {
 }
 
 Write-Host "📦 Creating temporary venv…"
-# 1) Try with the active python
 & python -m venv $venvPath 2>&1 | ForEach-Object { Write-Host $_ }
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning "'python -m venv' failed (probably locked), retrying with 'py -3 -m venv'…"
+    Write-Warning "'python -m venv' failed, retrying with 'py -3 -m venv'…"
     & py -3 -m venv $venvPath 2>&1 | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) {
         throw "❗️ Could not create virtual environment (exit code $LASTEXITCODE)"
@@ -26,11 +25,11 @@ Write-Host "🟢 Activating venv…"
 & "$venvPath\Scripts\Activate.ps1"
 
 Write-Host "⬇️  Installing requirements…"
-pip install --upgrade pip
-pip install -r "$PSScriptRoot\requirements.txt"
+# Use python -m pip so pip upgrades/install inside the venv correctly
+& python -m pip install --upgrade pip 2>&1 | ForEach-Object { Write-Host $_ }
+& python -m pip install -r "$PSScriptRoot\requirements.txt" 2>&1 | ForEach-Object { Write-Host $_ }
 
 Write-Host "🚀 Running setup.py…"
-# capture and emit each line
 $raw = & python -m scripts.search.setup 2>&1
 $raw -split "`r?`n" | ForEach-Object { if ($_ -match '\S') { Write-Host $_ } }
 
