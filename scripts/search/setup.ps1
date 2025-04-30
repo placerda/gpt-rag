@@ -1,3 +1,4 @@
+# scripts/search/setup.ps1
 # requires PowerShell 5.1+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -6,23 +7,24 @@ Write-Host "📦 Creating temporary venv…"
 python -m venv "scripts/search/.venv_temp"
 
 Write-Host "🟢 Activating venv…"
-# On Windows PowerShell:
 & ".\scripts\search\.venv_temp\Scripts\Activate.ps1"
 
 Write-Host "⬇️  Installing requirements…"
 pip install --upgrade pip
-pip install -r ".\scripts\search\requirements.txt" 
+pip install -r ".\scripts\search\requirements.txt"
 
 Write-Host "🚀 Running setup.py…"
-python -m scripts.search.setup
+$output = & python -m scripts.search.setup 2>&1
+Write-Host $output
+
+if ($LASTEXITCODE -ne 0) {
+    throw "❗️ [Search Setup] 'setup.py' exited with code $LASTEXITCODE"
+}
 
 Write-Host "🧹 Cleaning up…"
-# Deactivate the venv (Deactivate function is defined by Activate.ps1)
 if (Get-Command Deactivate -ErrorAction SilentlyContinue) {
     Deactivate
 }
-
-# Remove the temporary virtual environment folder
 Remove-Item -Recurse -Force .\scripts\search\.venv_temp
 
 Write-Host "✅ Search setup script finished."
