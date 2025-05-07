@@ -3,7 +3,6 @@
   'appconfig'
   'keyvault'
   'storage'
-  'aifoundry'
 ])
 param resourceType       string
 param resourceName       string
@@ -31,30 +30,24 @@ resource sa 'Microsoft.Storage/storageAccounts@2021-04-01' existing = if (resour
   name: resourceName
   scope: resourceGroup(resourceGroupName)
 }
-resource af 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' existing = if (resourceType == 'aifoundry') {
-  name: resourceName
-  scope: resourceGroup(resourceGroupName)
-}
 
 // Single, idempotent role assignment
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   // Pick the right target id inline—Bicep sees `ais.id`, `cfg.id`, etc. directly.
   name: guid(
     resourceType == 'aiservices' ? ais.id
   : resourceType == 'appconfig'  ? cfg.id
   : resourceType == 'keyvault'   ? kv.id
-  : resourceType == 'storage'    ? sa.id
-                                   : af.id,
+                                 : sa.id,
     principalId,
     roleDefId
   )
 
   // Scope it to the very same resource
   scope: resourceType == 'aiservices' ? ais
-        : resourceType == 'appconfig'  ? cfg
-        : resourceType == 'keyvault'   ? kv
-        : resourceType == 'storage'    ? sa
-                                       : af
+        : resourceType == 'appconfig' ? cfg
+        : resourceType == 'keyvault'  ? kv
+                                      : sa
 
   properties: {
     principalId     : principalId

@@ -12,115 +12,138 @@ targetScope = 'resourceGroup'
 // General Parameters
 // ----------------------------------------------------------------------
 
-param environmentName                      string = '' // Environment name for tagging resources.
-param location                             string        // Primary deployment location.
-param deploymentTags                       object        // Tags applied to all resources.
-param principalId                          string        // Principal ID for role assignments.
-param configureRBAC                        string = ''   // Assign RBAC roles to resources.
+param environmentName                     string = ''  // AZD environment
+param location                            string       // Primary deployment location.
+param deploymentTags                      object = {}  // Tags applied to all resources.
+param principalId                         string       // Principal ID for role assignments.
+param configureRbac                       string = ''  // Assign RBAC roles to resources.
+param networkIsolation                    string = '' 
 
 // ----------------------------------------------------------------------
-// Reuse Parameters
+// Resource Naming params
 // ----------------------------------------------------------------------
 
-// Foundry Hub
-param AIFoundryHubReuse                    string = ''
-param existingAIFoundryHubResourceGroupName string = ''
-param existingAIFoundryHubName             string = ''
-
-// Azure OpenAI
-param reuseAOAI                            string = ''
-param existingAOAIResourceGroup            string = ''
-param existingAOAIName                     string = ''
-
-// API Management
-param reuseAPIM                            string = ''
-param existingAPIMResourceGroup            string = ''
-param existingAPIMName                     string = ''
-
-// ----------------------------------------------------------------------
-// Resource Naming (Empty = auto-generated unique name)
-// ----------------------------------------------------------------------
-
-param AIFoundryStorageAccountName          string = ''
-param AIHubName                            string = ''
-param AIProjectName                        string = ''
-param AIServicesName                       string = ''
-param AOAIServiceName                      string = ''
-param apimResourceName                     string = ''
-param appConfigName                        string = ''
-param appInsightsName                      string = ''
-param containerEnvName                     string = ''
-param containerRegistryName                string = ''
-param conversationContainerName            string = ''
-param dataIngestContainerAppName           string = ''
-param dataIngestContainerImage             string = ''
-param datasourcesContainerName             string = ''
-param dbAccountName                        string = ''
-param dbDatabaseName                       string = ''
-param frontEndContainerAppName             string = ''
-param frontEndContainerImage               string = ''
-param keyVaultName                         string = ''
-param logAnalyticsWorkspaceName            string = ''
-param orchestratorContainerAppName         string = ''
-param orchestratorImage                    string = ''
-param searchIndexName                      string = ''
-param searchServiceName                    string = ''
-param solutionStorageAccountName           string = ''
-param storageAccountContainerDocs          string = ''
-param storageAccountContainerImages        string = ''
+param aiFoundryStorageAccountName        string = ''
+param aiHubName                          string = ''
+param aiProjectName                      string = ''
+param aiServicesName                     string = ''
+param aoaiServiceName                    string = ''
+param apimResourceName                   string = ''
+param appConfigName                      string = ''
+param appInsightsName                    string = ''
+param containerEnvName                   string = ''
+param containerRegistryName              string = ''
+param dataIngestContainerAppName         string = ''
+param dbAccountName                      string = ''
+param dbDatabaseName                     string = ''
+param frontEndContainerAppName           string = ''
+param keyVaultName                       string = ''
+param logAnalyticsWorkspaceName          string = ''
+param orchestratorContainerAppName       string = ''
+param searchServiceName                  string = ''
+param solutionStorageAccountName         string = ''
 
 // ----------------------------------------------------------------------
-// API Management Configuration
+// Reuse Config params
 // ----------------------------------------------------------------------
 
-param apimPublisherEmail                   string = ''
-param apimPublisherName                    string = ''
-param apimSku                              string = ''
-param AOAIAPIName                          string = ''
-param AOAIAPIDisplayName                   string = ''
-param AOAIAPIPath                          string = ''
-param AOAISubscriptionName                 string = ''
-param AOAISubscriptionDescription          string = ''
-param AOAISubscriptionSecretName           string = ''
+param aiFoundryHubReuse                  string = '' 
+param existingAifoundryHubResourceGroup  string = '' 
+param existingAifoundryHubName           string = '' 
+param reuseApim                          string = ''  
+param reuseAoai                          string = ''  
+param existingAoaiResourceGroup          string = ''  
+param existingAoaiName                   string = '' 
 
 // ----------------------------------------------------------------------
-// API Versions
+// Hooks Configuration params
 // ----------------------------------------------------------------------
-
-param docIntelAPIVersion                   string = ''
-param openAIAPIVersion                     string = ''
-param searchAPIVersion                     string = ''
+param runSearchSetup                      string = '' 
 
 // ----------------------------------------------------------------------
-// Chat Model Configuration
+// AI Hub and Project params
 // ----------------------------------------------------------------------
 
-param chatDeploymentCapacity               string = ''
-param chatDeploymentName                   string = ''
-param chatModelDeploymentType              string = '' // 'Standard', 'ProvisionedManaged', 'GlobalStandard'
-param chatModelName                        string = '' // e.g., 'gpt-35-turbo', 'gpt-4', 'gpt-4o'
-param chatModelVersion                     string = '' // e.g., '1106', '0125-preview', '2024-11-20'
+param aoaiConnectionName                  string = ''
+param aiServicesConnectionName            string = ''
+param aiSearchConnectionName              string = ''
 
 // ----------------------------------------------------------------------
-// Embeddings Model Configuration
+// Storage Account vars
 // ----------------------------------------------------------------------
 
-param embeddingsDeploymentCapacity         string = ''
-param embeddingsDeploymentName             string = ''
-param embeddingsDeploymentType             string = ''
-param embeddingsModelName                  string = ''
-param embeddingsModelVersion               string = '' // e.g., '1', '2'
-param embeddingsVectorDimensions           string = ''
+param storageAccountContainerDocs         string = ''
+param storageAccountContainerImages       string = ''
 
 // ----------------------------------------------------------------------
-// Chunking Configuration
+// AI Search Service params
 // ----------------------------------------------------------------------
 
-param chunkingMinChunkSize                 string = ''
-param chunkingNumTokens                    string = ''
-param chunkingTokenOverlap                 string = ''
-param chatNumTokens                        string = ''
+param searchIndexName                    string = ''
+param searchApiVersion                   string = ''
+param searchAnalyzerName                 string = ''
+param searchIndexInterval                string = ''
 
+// ----------------------------------------------------------------------
+// API Management params
+// ----------------------------------------------------------------------
+
+param apimPublisherEmail                  string = ''
+param apimPublisherName                   string = ''
+param apimSku                             string = ''
+param aoaiApiName                         string = ''
+param aoaiApiDisplayName                  string = ''
+param aoaiApiPath                         string = ''
+param aoaiSubscriptionName                string = ''
+param aoaiSubscriptionDescription         string = ''
+
+// ----------------------------------------------------------------------
+// AI Services params
+// ----------------------------------------------------------------------
+
+param docIntelApiVersion                   string = ''
+
+// ----------------------------------------------------------------------
+// Azure Open AI Service params
+// ----------------------------------------------------------------------
+
+param chatDeploymentCapacity              string = ''
+param chatDeploymentName                  string = ''
+param chatModelDeploymentType             string = '' // 'Standard', 'ProvisionedManaged', 'GlobalStandard'
+param chatModelName                       string = '' // e.g., 'gpt-35-turbo', 'gpt-4', 'gpt-4o'
+param chatModelVersion                    string = '' // e.g., '1106', '0125-preview', '2024-11-20'
+
+param embeddingsDeploymentCapacity        string = ''
+param embeddingsDeploymentName            string = ''
+param embeddingsDeploymentType            string = ''
+param embeddingsModelName                 string = ''
+param embeddingsModelVersion              string = '' // e.g., '1', '2'
+param embeddingsVectorDimensions          string = ''
+
+param openAiApiVersion                     string = ''
+
+// ----------------------------------------------------------------------
+// Chunking params
+// ----------------------------------------------------------------------
+
+param chunkingMinChunkSize                string = ''
+param chunkingNumTokens                   string = ''
+param chunkingTokenOverlap                string = ''
+param chatNumTokens                       string = ''
+
+// ----------------------------------------------------------------------
+// CosmosDB params
+// ----------------------------------------------------------------------
+
+param conversationContainerName          string = ''
+param datasourcesContainerName           string = ''
+
+// ----------------------------------------------------------------------
+// Container Apps params
+// ----------------------------------------------------------------------
+param orchestratorContainerImage         string = ''
+param dataIngestContainerImage           string = ''
+param frontEndContainerImage             string = ''
 
 //////////////////////////////////////////////////////////////////////////
 // VARIABLES
@@ -129,91 +152,101 @@ param chatNumTokens                        string = ''
 // ----------------------------------------------------------------------
 // General Variables
 // ----------------------------------------------------------------------
-var _resourceToken        = toLower(uniqueString(subscription().id, environmentName, location))
-var _tags                 = union({ env: _azureEnvironmentName }, deploymentTags)
-var _azureCloud           = environment().name
-var _azureEnvironmentName = empty(environmentName)           ? 'dev'           : environmentName
-var _location             = empty(location)                  ? 'eastus2'       : location
-var _principalId          = empty(principalId)               ? ''              : principalId
-var _configureRBAC        = (empty(configureRBAC) || toLower(configureRBAC) == 'true')
-var _dummyImageName       = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+
+var _resourceToken           = toLower(uniqueString(subscription().id, environmentName, location))
+var _tags                    = union({ env: _environmentName }, deploymentTags)
+var _azureCloud              = environment().name
+var _environmentName         = empty(environmentName)           ? 'dev'           : environmentName
+var _location                = empty(location)                  ? 'eastus2'       : location
+var _principalId             = empty(principalId)               ? ''              : principalId
+var _configureRbac           = (empty(configureRbac) || toLower(configureRbac) == 'true')
+var _dummyImageName          = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+var _networkIsolation        = empty(networkIsolation)          ? false           : (toLower(networkIsolation) == 'true')
 
 // ----------------------------------------------------------------------
-// Existing Resources Reuse Flags
+// Resource Naming 
 // ----------------------------------------------------------------------
-var _reuseAIFoundryHub = (!empty(AIFoundryHubReuse) && toLower(AIFoundryHubReuse)   == 'true')
-var _reuseAPIM         = (!empty(reuseAPIM)          && toLower(reuseAPIM)          == 'true')
-var _reuseAOAI         = (!empty(reuseAOAI)          && toLower(reuseAOAI)          == 'true')
+
+var _aiFoundryStorageAccountName        = empty(aiFoundryStorageAccountName)       ? '${_abbrs.storageStorageAccounts}aihub0${_resourceToken}'       : aiFoundryStorageAccountName
+var _aiHubName                          = empty(aiHubName)                         ? '${_abbrs.aiHub}-${_resourceToken}'                             : aiHubName
+var _aiProjectName                      = empty(aiProjectName)                     ? '${_abbrs.aiProject}-${_resourceToken}'                         : aiProjectName
+var _aiServicesName                     = empty(aiServicesName)                    ? '${_abbrs.cognitiveServicesAccounts}-${_resourceToken}'         : aiServicesName
+var _aoaiServiceName                    = empty(aoaiServiceName)                   ? '${_abbrs.openaiServices}-${_resourceToken}'                    : aoaiServiceName
+var _apimResourceName                   = empty(apimResourceName)                  ? '${_abbrs.apiManagementService}-${_resourceToken}'              : apimResourceName
+var _appConfigName                      = empty(appConfigName)                     ? '${_abbrs.appConfigurationStores}-${_resourceToken}'            : appConfigName
+var _appInsightsName                    = empty(appInsightsName)                   ? '${_abbrs.insightsComponents}-${_resourceToken}'               : appInsightsName
+var _containerEnvName                   = empty(containerEnvName)                  ? '${_abbrs.containerEnvs}${_resourceToken}'                     : containerEnvName
+var _containerRegistryName              = empty(containerRegistryName)             ? '${_abbrs.containerRegistries}${_resourceToken}'               : containerRegistryName
+var _dataIngestContainerAppName         = empty(dataIngestContainerAppName)        ? 'dataingest-${_resourceToken}'                                 : dataIngestContainerAppName
+var _dbAccountName                      = empty(dbAccountName)                     ? '${_abbrs.cosmosDbAccount}-${_resourceToken}'                  : dbAccountName
+var _dbDatabaseName                     = empty(dbDatabaseName)                    ? '${_abbrs.cosmosDbDatabase}-${_resourceToken}'                 : dbDatabaseName
+var _frontEndContainerAppName           = empty(frontEndContainerAppName)          ? 'frontend-${_resourceToken}'                                   : frontEndContainerAppName
+var _keyVaultName                       = empty(keyVaultName)                      ? '${_abbrs.keyVaultVaults}-${_resourceToken}'                   : keyVaultName
+var _logAnalyticsWorkspaceName          = empty(logAnalyticsWorkspaceName)         ? '${_abbrs.operationalInsightsWorkspaces}-${_resourceToken}'    : logAnalyticsWorkspaceName
+var _orchestratorContainerAppName       = empty(orchestratorContainerAppName)      ? 'orchestrator-${_resourceToken}'                               : orchestratorContainerAppName
+var _searchServiceName                  = empty(searchServiceName)                 ? '${_abbrs.searchSearchServices}-${_resourceToken}'             : searchServiceName
+var _solutionStorageAccountName         = empty(solutionStorageAccountName)        ? '${_abbrs.storageStorageAccounts}gptrag0${_resourceToken}'     : solutionStorageAccountName
 
 // ----------------------------------------------------------------------
-// Existing Resource Names
+// Reuse Config
 // ----------------------------------------------------------------------
-var _existingAIFoundryHubResourceGroup = empty(existingAIFoundryHubResourceGroupName) ? 'set-existing-foundry-hub-resource-group-name' : existingAIFoundryHubResourceGroupName
-var _existingAIFoundryHubName          = empty(existingAIFoundryHubName)              ? 'set-existing-foundry-hub-name'                : existingAIFoundryHubName
-var _existingAPIMResourceGroup         = empty(existingAPIMResourceGroup)             ? 'set-existing-apim-resource-group'             : existingAPIMResourceGroup
-var _existingAPIMName                  = empty(existingAPIMName)                      ? 'set-existing-apim-name'                       : existingAPIMName
-var _existingAOAIResourceGroup         = empty(existingAOAIResourceGroup)             ? 'set-existing-aoai-resource-group'             : existingAOAIResourceGroup
-var _existingAOAIName                  = empty(existingAOAIName)                      ? 'set-existing-aoai-name'                       : existingAOAIName
+
+var _reuseAifoundryHub                         = empty(aiFoundryHubReuse)                   ? false                                           : (toLower(aiFoundryHubReuse) == 'true')
+var _reuseApim                                 = empty(reuseApim)                           ? false                                           : (toLower(reuseApim) == 'true')
+var _reuseAoai                                 = empty(reuseAoai)                           ? false                                           : (toLower(reuseAoai) == 'true')
+var _existingAifoundryHubResourceGroupName     = empty(existingAifoundryHubResourceGroup)   ? 'set-existing-foundry-hub-resource-group-name'  : location
+var _existingAifoundryHubName                  = empty(existingAifoundryHubName)            ? 'set-existing-foundry-hub-name'                 : existingAifoundryHubName
+var _existingAoaiResourceGroup                 = empty(existingAoaiResourceGroup)           ? 'set-existing-aoai-resource-group'              : existingAoaiResourceGroup
+var _aoaiResourceGroup                         = _reuseAoai                                 ? _existingAoaiResourceGroup                      : resourceGroup().name    
+var _existingAoaiName                          = empty(existingAoaiName)                    ? 'set-existing-aoai-name'                        : existingAoaiName
 
 // ----------------------------------------------------------------------
-// AI Hub and Services
+// Hooks Configuration vars
 // ----------------------------------------------------------------------
-var _AIHubName                  = empty(AIHubName)       ? '${_abbrs.aiHub}-${_resourceToken}'                     : AIHubName
-var _AIProjectName              = empty(AIProjectName)   ? '${_abbrs.aiProject}-${_resourceToken}'                 : AIProjectName
-var _AIServicesName             = empty(AIServicesName)  ? '${_abbrs.cognitiveServicesAccounts}-${_resourceToken}' : AIServicesName
-var _AOAIServiceName            = empty(AOAIServiceName) ? '${_abbrs.openaiServices}-${_resourceToken}'            : AOAIServiceName
-var _AOAIServiceNameFinal       = _reuseAOAI             ? _existingAOAIName                                       : _AOAIServiceName
 
-var _AIHubId                    = _reuseAIFoundryHub     ? AIHubExisting.id                                        : AIHub.outputs.resourceId
-var _AIHubDiscoveryUrl          = _reuseAIFoundryHub     ? AIHubExisting.properties.discoveryUrl                   : 'https://${AIHub.outputs.location}.api.azureml.ms/discovery'
-var _AIProjectHost              = replace(replace(_AIHubDiscoveryUrl, 'https://', ''), '/discovery', '')
-var _AIProjectConnectionString  = '${_AIProjectHost};${subscription().subscriptionId};${resourceGroup().name};${_AIProjectName}'
-var _AOAIEndpoint               = _reuseAOAI ? OAIServiceExisting.properties.endpoint : OAIService.outputs.endpoint
+ var _runSearchSetup = empty(runSearchSetup) ? true : (toLower(runSearchSetup) == 'true')
 
 // ----------------------------------------------------------------------
-// App Configuration and Infrastructure
+// AI Hub and Project vars
 // ----------------------------------------------------------------------
-var _appConfigName             = empty(appConfigName)        ? '${_abbrs.appConfigurationStores}-${_resourceToken}' : appConfigName
-var _containerRegistryName     = empty(containerRegistryName)? '${_abbrs.containerRegistries}${_resourceToken}'   : containerRegistryName
-var _containerEnvName          = empty(containerEnvName)     ? '${_abbrs.containerEnvs}${_resourceToken}'          : containerEnvName
-var _keyVaultName              = empty(keyVaultName)         ? '${_abbrs.keyVaultVaults}-${_resourceToken}'        : keyVaultName
-var _logAnalyticsWorkspaceName = empty(logAnalyticsWorkspaceName) ? '${_abbrs.operationalInsightsWorkspaces}-${_resourceToken}' : logAnalyticsWorkspaceName
-var _appInsightsName           = empty(appInsightsName)      ? '${_abbrs.insightsComponents}-${_resourceToken}'    : appInsightsName
+
+var _aoaiServiceNameFinal       = _reuseAoai             ? _existingAoaiName                                : _aoaiServiceName
+var _aiHubId                    = _reuseAifoundryHub     ? aiHubExisting.id                                 : aiHub.outputs.resourceId
+var _aiHubDiscoveryUrl          = _reuseAifoundryHub     ? aiHubExisting.properties.discoveryUrl            : 'https://${aiHub.outputs.location}.api.azureml.ms/discovery'
+var _aiProjectHost              = replace(replace(_aiHubDiscoveryUrl, 'https://', ''), '/discovery', '')
+var _aiProjectConnectionString  = '${_aiProjectHost};${subscription().subscriptionId};${resourceGroup().name};${_aiProjectName}'
+var _aoaiEndpoint               = _reuseAoai ? aoaiServiceExisting.properties.endpoint : aoaiService.outputs.endpoint
+
+var _aoaiConnectionName         = empty(aoaiConnectionName)      ? 'openai-conn'      : aoaiConnectionName  
+var _aiServicesConnectionName   = empty(aiServicesConnectionName)? 'aiservices-conn'  : aiServicesConnectionName
+var _aiSearchConnectionName     = empty(aiSearchConnectionName)  ? 'aisearch-conn'    : aiSearchConnectionName
 
 // ----------------------------------------------------------------------
-// Search Service
+// Storage Account vars
 // ----------------------------------------------------------------------
-var _searchServiceName = empty(searchServiceName) ? '${_abbrs.searchSearchServices}-${_resourceToken}' : searchServiceName
-var _searchIndexName   = empty(searchIndexName)   ? 'ragindex'                                         : searchIndexName
 
-// ----------------------------------------------------------------------
-// Storage
-// ----------------------------------------------------------------------
-var _AIFoundryStorageAccountName    = empty(AIFoundryStorageAccountName)    ? '${_abbrs.storageStorageAccounts}aihub0${_resourceToken}'  : AIFoundryStorageAccountName
-var _solutionStorageAccountName     = empty(solutionStorageAccountName)     ? '${_abbrs.storageStorageAccounts}gptrag0${_resourceToken}' : solutionStorageAccountName
 var _storageAccountContainerDocs    = empty(storageAccountContainerDocs)    ? 'documents'         : storageAccountContainerDocs
 var _storageAccountContainerImages  = empty(storageAccountContainerImages)  ? 'documents-images'  : storageAccountContainerImages
 
 // ----------------------------------------------------------------------
-// OpenAI API Configuration
+// AI Search Service vars
 // ----------------------------------------------------------------------
-var _AOAIAPIName                = empty(AOAIAPIName)                  ? 'openai'              : AOAIAPIName
-var _AOAIAPIPath                = empty(AOAIAPIPath)                  ? 'openai'              : AOAIAPIPath
-var _AOAIAPIDisplayName         = empty(AOAIAPIDisplayName)           ? 'OpenAI'              : AOAIAPIDisplayName
-var _AOAIAPISpecURL             = 'https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/stable/2024-02-01/inference.json'
-var _AOAIAPIVersion             = empty(openAIAPIVersion)             ? '2024-10-21'          : openAIAPIVersion
-var _AOAISubscriptionSecretName = empty(AOAISubscriptionSecretName)   ? 'AOAISubscriptionKey' : AOAISubscriptionSecretName
+
+var _searchIndexName      = empty(searchIndexName)       ? 'ragindex-${_resourceToken}'  : searchIndexName
+var _searchApiVersion     = empty(searchApiVersion)      ? '2024-07-01'                  : searchApiVersion
+var _searchAnalyzerName   = empty(searchAnalyzerName)    ? 'standard'                    : searchAnalyzerName
+var _searchIndexInterval  = empty(searchIndexInterval)   ? 'PT1H'                        : searchIndexInterval
 
 // ----------------------------------------------------------------------
-// APIM Configuration
+// API Management vars
 // ----------------------------------------------------------------------
-var _apimResourceName            = empty(apimResourceName)             ? '${_abbrs.apiManagementService}-${_resourceToken}'    : apimResourceName
-var _apimSku                     = empty(apimSku)                      ? 'Consumption'                                         : apimSku
-var _apimPublisherEmail          = empty(apimPublisherEmail)           ? 'noreply@example.com'                                 : apimPublisherEmail
-var _apimPublisherName           = empty(apimPublisherName)            ? 'MyCompany'                                           : apimPublisherName
-var _AOAISubscriptionName        = empty(AOAISubscriptionName)         ? 'openai-subscription'                                 : AOAISubscriptionName
-var _AOAISubscriptionDescription = empty(AOAISubscriptionDescription)  ? 'OpenAI Subscription'                                 : AOAISubscriptionDescription
-var _AOAIAPIpolicyXmlTemplate = '''
+
+var _apimSku                    = empty(apimSku)                      ? 'Consumption'                                         : apimSku
+var _apimPublisherEmail         = empty(apimPublisherEmail)           ? 'noreply@example.com'                                 : apimPublisherEmail
+var _apimPublisherName          = empty(apimPublisherName)            ? 'MyCompany'                                           : apimPublisherName
+var _aoaiSubscriptionName       = empty(aoaiSubscriptionName)         ? 'openai-subscription'                                 : aoaiSubscriptionName
+var _aoaiSubscriptionDescription= empty(aoaiSubscriptionDescription)  ? 'OpenAI Subscription'                                 : aoaiSubscriptionDescription
+var _aoaiApiPolicyXmlTemplate = '''
 <policies>
     <inbound>
       <base />
@@ -236,30 +269,24 @@ var _AOAIAPIpolicyXmlTemplate = '''
     </on-error>
 </policies>
 '''
-var _AOAIAPIpolicyXml = replace(_AOAIAPIpolicyXmlTemplate, '__BACKEND_ID__', _AOAIServiceNameFinal)
-var _apimGatewayUrl   = _reuseAPIM ? '' : APIMService.properties.gatewayUrl
+var _aoaiApiPolicyXml           = replace(_aoaiApiPolicyXmlTemplate, '__BACKEND_ID__', _aoaiServiceNameFinal)
+var _aoaiApiName                = empty(aoaiApiName)                  ? 'openai'              : aoaiApiName
+var _aoaiApiPath                = empty(aoaiApiPath)                  ? 'openai'              : aoaiApiPath
+var _aoaiApiDisplayName         = empty(aoaiApiDisplayName)           ? 'OpenAI'              : aoaiApiDisplayName
+var _aoaiApiSpecUrl             = 'https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/stable/2024-02-01/inference.json'
 
 // ----------------------------------------------------------------------
-// Cosmos DB Configuration
+// AI Services vars
 // ----------------------------------------------------------------------
-var _dbAccountName            = empty(dbAccountName)               ? '${_abbrs.cosmosDbAccount}-${_resourceToken}'       : dbAccountName
-var _dbDatabaseName           = empty(dbDatabaseName)              ? '${_abbrs.cosmosDbDatabase}-${_resourceToken}'      : dbDatabaseName
-var _conversationContainerName= empty(conversationContainerName)   ? 'conversations'                                      : conversationContainerName
-var _datasourcesContainerName = empty(datasourcesContainerName)    ? 'datasources'                                        : datasourcesContainerName
+
+var _docIntelApiVersion = empty(docIntelApiVersion) ? '2024-11-30' : docIntelApiVersion
 
 // ----------------------------------------------------------------------
-// Container Apps and Images
+// Azure Open AI Service vars
 // ----------------------------------------------------------------------
-var _orchestratorContainerAppName = empty(orchestratorContainerAppName) ? 'orchestrator-${_resourceToken}' : orchestratorContainerAppName
-var _orchestratorImage            = empty(orchestratorImage)              ? _dummyImageName                  : orchestratorImage
-var _dataIngestContainerAppName   = empty(dataIngestContainerAppName)     ? 'dataingest-${_resourceToken}'   : dataIngestContainerAppName
-var _dataIngestImage               = empty(dataIngestContainerImage)       ? _dummyImageName                  : dataIngestContainerImage
-var _frontEndContainerAppName     = empty(frontEndContainerAppName)       ? 'frontend-${_resourceToken}'     : frontEndContainerAppName
-var _frontEndImage                = empty(frontEndContainerImage)         ? _dummyImageName                  : frontEndContainerImage
 
-// ----------------------------------------------------------------------
-// Chat Model Configuration
-// ----------------------------------------------------------------------
+var _aoaiApiVersion             = empty(openAiApiVersion)     ? '2024-10-21'          : openAiApiVersion
+
 var _chatModelName           = empty(chatModelName)           ? 'gpt-4o-mini'                    : chatModelName
 var _chatModelDeploymentType = empty(chatModelDeploymentType) ? 'GlobalStandard'                 : chatModelDeploymentType
 var _chatModelVersion        = empty(chatModelVersion)        ? '2024-07-18'                     : chatModelVersion
@@ -267,28 +294,33 @@ var _chatDeploymentName      = empty(chatDeploymentName)      ? 'chat'          
 var _chatNumTokens           = empty(chatNumTokens)           ? '2048'                           : chatNumTokens
 var _chatDeploymentCapacity  = empty(chatDeploymentCapacity)  ? 40                               : int(chatDeploymentCapacity)
 
-// ----------------------------------------------------------------------
-// Embeddings Model Configuration
-// ----------------------------------------------------------------------
-var _embeddingsModelName        = empty(embeddingsModelName)    ? 'text-embedding-3-large'      : embeddingsModelName
-var _embeddingsModelVersion     = empty(embeddingsModelVersion) ? '1'                           : embeddingsModelVersion
-var _embeddingsDeploymentName   = empty(embeddingsDeploymentName)? 'text-embedding'             : embeddingsDeploymentName
-var _embeddingsDeploymentType   = empty(embeddingsDeploymentType)? 'Standard'                   : embeddingsDeploymentType
-var _embeddingsVectorDimensions = empty(embeddingsVectorDimensions)? '3072'                     : embeddingsVectorDimensions
-var _embeddingsDeploymentCapacity = empty(embeddingsDeploymentCapacity)? 40                     : int(embeddingsDeploymentCapacity)
+var _embeddingsModelName         = empty(embeddingsModelName)         ? 'text-embedding-3-large'      : embeddingsModelName
+var _embeddingsModelVersion      = empty(embeddingsModelVersion)      ? '1'                           : embeddingsModelVersion
+var _embeddingsDeploymentName    = empty(embeddingsDeploymentName)    ? 'text-embedding'              : embeddingsDeploymentName
+var _embeddingsDeploymentType    = empty(embeddingsDeploymentType)    ? 'Standard'                   : embeddingsDeploymentType
+var _embeddingsVectorDimensions  = empty(embeddingsVectorDimensions)  ? '3072'                       : embeddingsVectorDimensions
+var _embeddingsDeploymentCapacity= empty(embeddingsDeploymentCapacity)? 40                            : int(embeddingsDeploymentCapacity)
 
 // ----------------------------------------------------------------------
-// Chunking and Search API
+// Chunking vars
 // ----------------------------------------------------------------------
+
 var _chunkingMinChunkSize = empty(chunkingMinChunkSize) ? '100'        : chunkingMinChunkSize
 var _chunkingNumTokens    = empty(chunkingNumTokens)    ? '2048'       : chunkingNumTokens
 var _chunkingTokenOverlap = empty(chunkingTokenOverlap) ? '200'        : chunkingTokenOverlap
-var _searchAPIVersion     = empty(searchAPIVersion)     ? '2024-07-01' : searchAPIVersion
 
 // ----------------------------------------------------------------------
-// Document Intelligence
+// CosmosDB vars
 // ----------------------------------------------------------------------
-var _docIntelAPIVersion = empty(docIntelAPIVersion) ? '2024-11-30' : docIntelAPIVersion
+var _conversationContainerName = empty(conversationContainerName)   ? 'conversations'                                      : conversationContainerName
+var _datasourcesContainerName  = empty(datasourcesContainerName)    ? 'datasources'                                        : datasourcesContainerName
+
+// ----------------------------------------------------------------------
+// Container Apps vars
+// ----------------------------------------------------------------------
+var _orchestratorContainerImage = empty(orchestratorContainerImage)   ? _dummyImageName                  : orchestratorContainerImage
+var _dataIngestContainerImage   = empty(dataIngestContainerImage)     ? _dummyImageName                  : dataIngestContainerImage
+var _frontEndContainerImage     = empty(frontEndContainerImage)       ? _dummyImageName                  : frontEndContainerImage
 
 // Abbreviation dictionary
 var _abbrs = {
@@ -316,8 +348,8 @@ var _abbrs = {
 
 // Log Analytics Workspace
 //////////////////////////////////////////////////////////////////////////
-module LogAnalytics 'br/public:avm/res/operational-insights/workspace:0.11.1' = {
-  name: 'LogAnalyticsModule'
+module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.11.1' = {
+  name: 'logAnalyticsModule'
   params: {
     name:          _logAnalyticsWorkspaceName
     location:      _location
@@ -329,12 +361,12 @@ module LogAnalytics 'br/public:avm/res/operational-insights/workspace:0.11.1' = 
 
 // Application Insights
 //////////////////////////////////////////////////////////////////////////
-module AppInsights 'br/public:avm/res/insights/component:0.6.0' = {
-  name: 'AppInsightsModule'
+module appInsights 'br/public:avm/res/insights/component:0.6.0' = {
+  name: 'appInsightsModule'
   params: {
     name:                _appInsightsName
     location:            _location
-    workspaceResourceId: LogAnalytics.outputs.resourceId
+    workspaceResourceId: logAnalytics.outputs.resourceId
     applicationType:     'web'
     kind:                'web'
     disableIpMasking:    false
@@ -344,8 +376,8 @@ module AppInsights 'br/public:avm/res/insights/component:0.6.0' = {
 
 // Key Vault
 //////////////////////////////////////////////////////////////////////////
-module KeyVault 'br/public:avm/res/key-vault/vault:0.12.1' = {
-  name: 'KeyVaultModule'
+module keyVault 'br/public:avm/res/key-vault/vault:0.12.1' = {
+  name: 'keyVaultModule'
   params: {
     name:                  _keyVaultName
     location:              _location
@@ -356,37 +388,31 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.12.1' = {
     //                  Data Ingest Container App ← Key Vault Secrets User (Key Vault)
     //                  Orchestrator Container App ← Key Vault Secrets User (Key Vault)
     //                  Front End Container App ← Key Vault Secrets User (Key Vault)
-    roleAssignments: _configureRBAC ? [
+    roleAssignments: _configureRbac ? [
       {
         principalId           : _principalId
         roleDefinitionIdOrName: 'Key Vault Contributor'
       }
       {
-        principalId           : ContainerAppDataIngest.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppDataIngest.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Key Vault Secrets User'
       }      
       {
-        principalId           : ContainerAppOrchestrator.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppOrchestrator.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Key Vault Secrets User'
       }
       {
-        principalId           : ContainerAppFrontend.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppFrontend.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Key Vault Secrets User'
       }
-    ] : []    
-    secrets: [
-      {
-        name: _AOAISubscriptionDescription
-        value: APIMServiceOAISubscription.listSecrets().primaryKey
-      }
-    ]
+    ] : [] 
   }
 }
 
 // App Configuration Store
 //////////////////////////////////////////////////////////////////////////
-module AppConfig 'br/public:avm/res/app-configuration/configuration-store:0.6.3' = {
-  name: 'AppConfigModule'
+module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.6.3' = {
+  name: 'appConfigModule'
   params: {
     name:     _appConfigName
     location: _location
@@ -397,7 +423,7 @@ module AppConfig 'br/public:avm/res/app-configuration/configuration-store:0.6.3'
       privateLinkDelegation: 'Disabled'
     }
     // Role assignment: Principal ← App Configuration Data Owner (App Configuration)
-    roleAssignments: _configureRBAC ? [
+    roleAssignments: _configureRbac ? [
       {
         principalId           : _principalId
         roleDefinitionIdOrName: 'App Configuration Data Owner'
@@ -408,8 +434,8 @@ module AppConfig 'br/public:avm/res/app-configuration/configuration-store:0.6.3'
 
 // Cosmos DB Account and Database
 //////////////////////////////////////////////////////////////////////////
-module DatabaseAccount 'br/public:avm/res/document-db/database-account:0.12.0' = {
-  name: 'DatabaseAccountModule'
+module databaseAccount 'br/public:avm/res/document-db/database-account:0.12.0' = {
+  name: 'databaseAccountModule'
   params: {
     name:                   _dbAccountName  
     location:               _location
@@ -425,7 +451,7 @@ module DatabaseAccount 'br/public:avm/res/document-db/database-account:0.12.0' =
     //                  Principal ← Cosmos DB Built-in Data Contributor (Cosmos DB) 
       sqlRoleAssignmentsPrincipalIds: [
       {
-        principalId:        ContainerAppOrchestrator.outputs.systemAssignedMIPrincipalId
+        principalId:        containerAppOrchestrator.outputs.systemAssignedMIPrincipalId
         roleDefinitionName: 'Cosmos DB Built-in Data Contributor'
         scopeType:          'account'                 // account | database | container
         scopeName:          ''                        // empty == whole account
@@ -470,8 +496,8 @@ module DatabaseAccount 'br/public:avm/res/document-db/database-account:0.12.0' =
 //////////////////////////////////////////////////////////////////////////
 
 // Solution Storage Account
-module StorageAccountSolution 'br/public:avm/res/storage/storage-account:0.19.0' = {
-  name: 'StorageAccountSolutionModule'
+module storageAccountSolution 'br/public:avm/res/storage/storage-account:0.19.0' = {
+  name: 'storageAccountSolutionModule'
   params: {
     name:                     _solutionStorageAccountName
     location:                 _location
@@ -480,15 +506,36 @@ module StorageAccountSolution 'br/public:avm/res/storage/storage-account:0.19.0'
     allowBlobPublicAccess:    false
     supportsHttpsTrafficOnly: true
     tags:                     _tags
+    blobServices: {
+      automaticSnapshotPolicyEnabled: true
+      containerDeleteRetentionPolicyDays: 10
+      containerDeleteRetentionPolicyEnabled: true
+      containers: [
+        {
+          name: 'nl2sql'
+          publicAccess: 'None'
+        }
+        {
+          name: _storageAccountContainerDocs
+          publicAccess: 'None'
+        }
+        {
+          name: _storageAccountContainerImages
+          publicAccess: 'None'
+        }     
+      ]
+      deleteRetentionPolicyDays: 7
+      deleteRetentionPolicyEnabled: true
+      lastAccessTimeTrackingPolicyEnabled: true
+    }
     // Role assignment: Data Ingest Container App ← Storage Blob Data Contributor (Solution Storage Account)
     //                  Principal ← Storage Blob Data Contributor (Solution Storage Account)
     //                  Front End Container App ← Storage Blob Data Reader (Solution Storage Account)
     //                  Orchestrator Container App ← Storage Blob Data Reader (Solution Storage Account)
     //                  Search Service ← Storage Blob Data Reader (Solution Storage Account)
-
-    roleAssignments: _configureRBAC ? [
+    roleAssignments: _configureRbac ? [
       {
-        principalId           : ContainerAppDataIngest.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppDataIngest.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Storage Blob Data Contributor'
       }
       {
@@ -496,15 +543,15 @@ module StorageAccountSolution 'br/public:avm/res/storage/storage-account:0.19.0'
         roleDefinitionIdOrName: 'Storage Blob Data Contributor'
       }      
       {
-        principalId           : ContainerAppFrontend.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppFrontend.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Storage Blob Data Reader'
       }  
       {
-        principalId           : ContainerAppOrchestrator.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppOrchestrator.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Storage Blob Data Reader'
       }  
       {
-        principalId           : SearchService.outputs.systemAssignedMIPrincipalId
+        principalId           : searchService.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Storage Blob Data Reader'
       }                  
     ] : []     
@@ -512,10 +559,10 @@ module StorageAccountSolution 'br/public:avm/res/storage/storage-account:0.19.0'
 }
 
 // AI Foundry Storage Account
-module StorageAccountAIFoundry 'br/public:avm/res/storage/storage-account:0.19.0' = {
-  name: 'StorageAccountAIFoundryModule'
+module storageAccountAIFoundry 'br/public:avm/res/storage/storage-account:0.19.0' = {
+  name: 'storageAccountAIFoundryModule'
   params: {
-    name:                     _AIFoundryStorageAccountName
+    name:                     _aiFoundryStorageAccountName
     location:                 _location
     skuName:                  'Standard_LRS'
     kind:                     'StorageV2'
@@ -523,7 +570,7 @@ module StorageAccountAIFoundry 'br/public:avm/res/storage/storage-account:0.19.0
     supportsHttpsTrafficOnly: true
     tags:                     _tags
     // Role assignment: Principal ← Storage Blob Data Contributor (AI Foundry Storage Account)
-    roleAssignments: _configureRBAC ? [
+    roleAssignments: _configureRbac ? [
       {
         principalId           : _principalId
         roleDefinitionIdOrName: 'Storage Blob Data Contributor'
@@ -536,8 +583,8 @@ module StorageAccountAIFoundry 'br/public:avm/res/storage/storage-account:0.19.0
 //////////////////////////////////////////////////////////////////////////
 
 // Azure AI Search Service
-module SearchService 'br/public:avm/res/search/search-service:0.10.0' =  {
-  name: 'SearchServiceModule'
+module searchService 'br/public:avm/res/search/search-service:0.10.0' =  {
+  name: 'searchServiceModule'
   params: {
     name: _searchServiceName
     location: _location
@@ -554,13 +601,13 @@ module SearchService 'br/public:avm/res/search/search-service:0.10.0' =  {
     //                  Orchestrator Container App ← Search Index Data Reader (Search Service)
     //                  Principal ← Search Index Data Reader (Search Service)
     //                  Principal ← Search Service Contributor (Search Service)    
-    roleAssignments: _configureRBAC ? [
+    roleAssignments: _configureRbac ? [
       {
-        principalId           : ContainerAppDataIngest.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppDataIngest.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Search Index Data Contributor'
       }      
       {
-        principalId           : ContainerAppOrchestrator.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppOrchestrator.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Search Index Data Reader'
       }
       {
@@ -576,11 +623,11 @@ module SearchService 'br/public:avm/res/search/search-service:0.10.0' =  {
 }
 
 // OpenAI Service
-module OAIService 'br/public:avm/res/cognitive-services/account:0.10.2' = if (!_reuseAOAI) {
-  name: 'OpenAIServiceModule'
+module aoaiService 'br/public:avm/res/cognitive-services/account:0.10.2' = if (!_reuseAoai) {
+  name: 'aoaiServiceModule'
   params: {
     kind:     'OpenAI'
-    name:     _AOAIServiceName
+    name:     _aoaiServiceName
     location: _location
     sku:      'S0'
     tags:     _tags
@@ -613,41 +660,41 @@ module OAIService 'br/public:avm/res/cognitive-services/account:0.10.2' = if (!_
     // Role assignment: Data Ingest Container App ← Cognitive Services OpenAI User (AI Services)
     //                  Orchestrator Container App ← Cognitive Services OpenAI User (AI Services)
     //                  AI Search Container App ← Cognitive Services OpenAI User (AI Services)
-    roleAssignments: _configureRBAC ? [
+    roleAssignments: _configureRbac ? [
       {
-        principalId           : SearchService.outputs.systemAssignedMIPrincipalId
+        principalId           : searchService.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
       }
       {
-        principalId           : ContainerAppDataIngest.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppDataIngest.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
       }      
       {
-        principalId           : ContainerAppOrchestrator.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppOrchestrator.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
       }        
     ] : []    
   }
 }
-resource OAIServiceExisting 'Microsoft.CognitiveServices/accounts@2024-10-01' existing = if (_reuseAOAI) {
-  name: _existingAOAIName
-  scope: resourceGroup(_existingAOAIResourceGroup)
+resource aoaiServiceExisting 'Microsoft.CognitiveServices/accounts@2024-10-01' existing = if (_reuseAoai) {
+  name: _existingAoaiName
+  scope: resourceGroup(_existingAoaiResourceGroup)
 }
 
 
 // AI Services 
-module AIServices 'br/public:avm/res/cognitive-services/account:0.10.2' = {
+module aiServices 'br/public:avm/res/cognitive-services/account:0.10.2' = {
   name: 'aiServicesModule'
   params: {
     kind:     'AIServices'
-    name:     _AIServicesName
+    name:     _aiServicesName
     location: _location
     sku:      'S0'
     tags:     _tags
     // Role assignment: Data Ingest Container App ← Cognitive Services User (AI Services)
-    roleAssignments: _configureRBAC ? [   
+    roleAssignments: _configureRbac ? [   
       {
-        principalId           : ContainerAppDataIngest.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppDataIngest.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'Cognitive Services User'
       }     
     ] : []    
@@ -656,246 +703,186 @@ module AIServices 'br/public:avm/res/cognitive-services/account:0.10.2' = {
 
 //APIM
 //////////////////////////////////////////////////////////////////////////
-
-
-// API Management Service
-// Note: The AVM's APIM module was not utilized here because it does not support retrieving APIMSubscription.listSecrets().primaryKey, 
-// which is required for creating the AI Foundry connection. Creating directly using the resource avoids passing the key as a custom module output.
-resource APIMService 'Microsoft.ApiManagement/service@2023-05-01-preview' = if (!_reuseAPIM) {
-  name: _apimResourceName
-  location: _location
-  sku: {
-    name: _apimSku
-    capacity: (_apimSku == 'Consumption') ? 0 : (_apimSku == 'Developer' ? 1 : 1)
-  }
-  properties: {
+module apimService 'br/public:avm/res/api-management/service:0.9.1' = {
+  name: 'apimServiceModule'
+  params: {
+    // Core APIM properties
+    name:           _apimResourceName
+    location:       _location
     publisherEmail: _apimPublisherEmail
-    publisherName: _apimPublisherName
-  }
-  identity: {
-    type: 'SystemAssigned'
-  }
-}
+    publisherName:  _apimPublisherName
+    sku:            _apimSku
 
-// API Management API
-resource APIMServiceOAIAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = if (!_reuseAPIM) {
-    name: _AOAIAPIName
-    parent: APIMService
-    properties: {
-      apiType: 'http'
-      description: _AOAIAPIName
-      displayName: _AOAIAPIDisplayName
-      format: 'openapi-link'
-      path: _AOAIAPIPath
-      protocols: [
-        'https'
-      ]
-      subscriptionKeyParameterNames: {
-        header: 'api-key'
-        query: 'api-key'
-      }
-      subscriptionRequired: true
-      type: 'http'
-      value: _AOAIAPISpecURL
+    // Enable system-assigned managed identity
+    managedIdentities: {
+      systemAssigned: true
     }
-  }
 
-// API Management Backend
-// Backend for OpenAI in API Management. Add more backends as needed for a backend pool.
-resource APIMServiceBackendOAI 'Microsoft.ApiManagement/service/backends@2023-05-01-preview'  =  if (!_reuseAPIM)  {
-  name: _AOAIServiceNameFinal
-  parent: APIMService
-  properties: {
-    description: 'backend description'
-    url:  '${_AOAIEndpoint}openai'
-    protocol: 'http'
-    circuitBreaker: {
-      rules: [
-        {
-          failureCondition: {
-            count: 3
-            errorReasons: [
-              'Server errors'
-            ]
-            interval: 'PT5M'
-            statusCodeRanges: [
-              {
-                min: 429
-                max: 429
-              }
-            ]
-          }
-          name: 'openAIBreakerRule'
-          tripDuration: 'PT1M'
+    // 1) Your AOAI API
+    apis: [
+      {
+        name:                        _aoaiApiName
+        displayName:                 _aoaiApiDisplayName
+        description:                 _aoaiApiName
+        path:                        _aoaiApiPath
+        protocols:                   [ 'https' ]
+        apiType:                     'http'
+        format:                      'openapi-link'
+        serviceUrl:                  _aoaiApiSpecUrl
+        subscriptionRequired:        true
+        subscriptionKeyParameterNames: {
+          header: 'api-key'
+          query:  'api-key'
         }
-      ]
-    }
-  }
-}
+        policies: [
+          {
+            format: 'rawxml'
+            value:  _aoaiApiPolicyXml
+          }
+        ]        
+      }
+    ]
 
-// API Management API Policy
-resource APIMServiceOAIAPIPolicy 'Microsoft.ApiManagement/service/apis/policies@2021-12-01-preview' = if (!_reuseAPIM) {
-  name: 'policy'
-  parent: APIMServiceOAIAPI
-  dependsOn: [
-    APIMServiceBackendOAI
-  ]  
-  properties: {
-    format: 'rawxml'
-    value: _AOAIAPIpolicyXml
-  }
-}
+    // 2) Your backend pointing at OpenAI
+    backends: [
+      {
+        name:        _aoaiServiceNameFinal
+        url:         '${_aoaiEndpoint}openai'
+        protocol:    'http'
+        description: 'backend description'
+        circuitBreaker: {
+          rules: [
+            {
+              name: 'openAIBreakerRule'
+              failureCondition: {
+                count:             3
+                errorReasons:     [ 'Server errors' ]
+                statusCodeRanges: [ { min: 429, max: 429 } ]
+                interval:         'PT5M'
+              }
+              tripDuration: 'PT1M'
+            }
+          ]
+        }
+      }
+    ]
 
-// API Management Subscription
-resource APIMServiceOAISubscription 'Microsoft.ApiManagement/service/subscriptions@2023-05-01-preview' = if (!_reuseAPIM)  {
-  name: _AOAISubscriptionName
-  parent: APIMService
-  properties: {
-    allowTracing: true
-    displayName: _AOAISubscriptionDescription
-    scope: '/apis'
-    state: 'active'
+    // 3) Subscription scoped to all your APIs
+    subscriptions: [
+      {
+        name:         _aoaiSubscriptionName
+        displayName:  _aoaiSubscriptionDescription
+        scope:        '/apis'
+        state:        'active'
+        allowTracing: true
+      }
+    ]
+
   }
 }
 
 // AI Foundry
 //////////////////////////////////////////////////////////////////////////
-module AIHub 'br/public:avm/res/machine-learning-services/workspace:0.12.0' = if (!_reuseAIFoundryHub) {
-  name: 'AIHubModule'
+module aiHub 'br/public:avm/res/machine-learning-services/workspace:0.12.0' = if (!_reuseAifoundryHub) {
+  name: 'aiHubModule'  
   params: {
-    name : _AIHubName
+    name : _aiHubName
     sku  : 'Basic'
     kind : 'Hub'
     location : _location
-
+    publicNetworkAccess : 'Enabled'
+    
     // link existing supporting resources
-    associatedKeyVaultResourceId          : KeyVault.outputs.resourceId
-    associatedStorageAccountResourceId    : StorageAccountAIFoundry.outputs.resourceId
-    associatedApplicationInsightsResourceId: AppInsights.outputs.resourceId
+    associatedKeyVaultResourceId          : keyVault.outputs.resourceId
+    associatedStorageAccountResourceId    : storageAccountAIFoundry.outputs.resourceId
+    associatedApplicationInsightsResourceId: appInsights.outputs.resourceId
 
     tags : _tags
+
+    // Role assignment: Principal ← Azure AI Developer (AI Hub)
+    roleAssignments: _configureRbac ? [
+      {
+        principalId           : _principalId
+        roleDefinitionIdOrName: '64702f94-c441-49e6-a78b-ef80e0188fee'
+      }                
+    ] : [] 
+
   }
 }
-resource AIHubExisting 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' existing = if (_reuseAIFoundryHub) {
-  name: _existingAIFoundryHubName
-  scope: resourceGroup(_existingAIFoundryHubResourceGroup)
+resource aiHubExisting 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' existing = if (_reuseAifoundryHub) {
+  name: _existingAifoundryHubName
+  scope: resourceGroup(_existingAifoundryHubResourceGroupName)
 }
 
 // AI Foundry Project and Connections
-module AIProject 'br/public:avm/res/machine-learning-services/workspace:0.9.1' = if (!_reuseAIFoundryHub) {
-  name: 'AIProjectModule'
+module aiProject 'br/public:avm/res/machine-learning-services/workspace:0.9.1' = {
+  name: 'aiProjectModule'
   params: {
     // core settings
-    name           : _AIProjectName
+    name           : _aiProjectName
     kind           : 'Project'         // AVM knows to create a “Project” workspace
     location       : _location
     sku            : 'Basic'           // must specify SKU
+    publicNetworkAccess : 'Enabled'
 
     // link to your existing Hub
-    hubResourceId  : _AIHubId
-    discoveryUrl   : _AIHubDiscoveryUrl
+    hubResourceId  : _aiHubId
+    discoveryUrl   : _aiHubDiscoveryUrl
 
     // optional extras
     tags           : _tags
 
-    connections: [
-      // OpenAI via APIM (ApiKey)
+    // Role assignment: Principal ← Azure AI Developer (AI Project)
+    roleAssignments: _configureRbac ? [
       {
-        name       : 'open_ai_connection'
-        category   : 'AzureOpenAI'
-        target     : _apimGatewayUrl
-        connectionProperties: {
-          authType                       : 'ApiKey'
-          credentials: {
-            key                         : APIMServiceOAISubscription.listSecrets().primaryKey
-          }
-          // useWorkspaceIdentity           : false
-          // enforceAccessToDefaultSecretStores: true
-          // isSharedToAll                  : false
-        }
-        metadata: {
-          ApiVersion                    : _AOAIAPIVersion
-          ApiType                       : 'AzureOpenAI'
-          Kind                          : 'AzureOpenAI'
-        }
-      }
+        principalId           : _principalId
+        roleDefinitionIdOrName: '64702f94-c441-49e6-a78b-ef80e0188fee'
+      }                
+    ] : [] 
 
-      // Cognitive Services (AAD)
-      {
-        name       : 'aiservices-conn'
-        category   : 'CognitiveService'
-        target     : 'https://${AIServices.outputs.name}.cognitiveservices.azure.com'
-        connectionProperties: {
-          authType                       : 'AAD'
-          // credentials                    : {}       // empty for AAD
-          // useWorkspaceIdentity           : true
-          // enforceAccessToDefaultSecretStores: true
-          // isSharedToAll                  : false
-        }
-        metadata: {
-          Kind                          : 'CognitiveService'
-        }
-      }
-
-      // Azure Cognitive Search (AAD)
-      {
-        name       : 'cognitive-search-conn'
-        category   : 'CognitiveSearch'
-        target     : 'https://${SearchService.outputs.name}.search.windows.net'
-        connectionProperties: {
-          authType                       : 'AAD'
-          // credentials                    : {}
-          // useWorkspaceIdentity           : true
-          // enforceAccessToDefaultSecretStores: true
-          // isSharedToAll                  : false
-        }
-        metadata: {}                  // no extra metadata needed
-      }
-    ]
   }
 }
-
 
 // Container Resources
 //////////////////////////////////////////////////////////////////////////
 
 // Container Apps Environment
-module ContainerEnv 'br/public:avm/res/app/managed-environment:0.9.1' = {
-  name: 'ContainerEnvModule'
+module containerEnv 'br/public:avm/res/app/managed-environment:0.9.1' = {
+  name: 'containerEnvModule'
   params: {
     name:     _containerEnvName
     location: _location
     tags:     _tags
-    logAnalyticsWorkspaceResourceId: LogAnalytics.outputs.resourceId
-    appInsightsConnectionString: AppInsights.outputs.connectionString
+    logAnalyticsWorkspaceResourceId: logAnalytics.outputs.resourceId
+    appInsightsConnectionString: appInsights.outputs.connectionString
     zoneRedundant: false
   }
 }
 
 // Container Registry
-module ContainerRegistry 'br/public:avm/res/container-registry/registry:0.9.1' = {
-  name: 'ContainerRegistryModule'
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.9.1' = {
+  name: 'containerRegistryModule'
   params: {
     name:     _containerRegistryName
     location: _location
     acrSku:   'Basic'
     tags:     _tags
     // Grant push to your principal, pull to each Container App
-    roleAssignments: _configureRBAC ? [
+    roleAssignments: _configureRbac ? [
       {
         principalId           : _principalId
         roleDefinitionIdOrName: 'AcrPush'      // push+pull
       }
       {
-        principalId           : ContainerAppDataIngest.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppDataIngest.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'AcrPull'      // push+pull
       }
       {
-        principalId           : ContainerAppFrontend.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppFrontend.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'AcrPull'      // push+pull
       }
       {
-        principalId           : ContainerAppOrchestrator.outputs.systemAssignedMIPrincipalId
+        principalId           : containerAppOrchestrator.outputs.systemAssignedMIPrincipalId
         roleDefinitionIdOrName: 'AcrPull'      // push+pull
       }            
     ] : []
@@ -904,12 +891,12 @@ module ContainerRegistry 'br/public:avm/res/container-registry/registry:0.9.1' =
 }
 
 // Orchestrator Container App
-module ContainerAppOrchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
-  name: 'ContainerAppOrchestratorModule'
+module containerAppOrchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
+  name: 'containerAppOrchestratorModule'
   params: {
     name:                  _orchestratorContainerAppName
     location:              _location
-    environmentResourceId: ContainerEnv.outputs.resourceId
+    environmentResourceId: containerEnv.outputs.resourceId
 
     ingressExternal: true
     ingressTargetPort: 80
@@ -930,15 +917,15 @@ module ContainerAppOrchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
     containers: [
       {
         name     : 'orchestrator'
-        image    : _orchestratorImage
+        image    : _orchestratorContainerImage
         resources: {
           cpu    : '0.5'
           memory : '1.0Gi'
         }
         env: [
           {
-            name  : 'APPCONFIG_ENDPOINT'
-            value : AppConfig.outputs.endpoint
+            name  : 'APP_CONFIG_ENDPOINT'
+            value : appConfig.outputs.endpoint
           }
         ]
       }
@@ -949,12 +936,12 @@ module ContainerAppOrchestrator 'br/public:avm/res/app/container-app:0.16.0' = {
 }
 
 // DataIngest Container App
-module ContainerAppDataIngest 'br/public:avm/res/app/container-app:0.16.0' = {
-  name: 'ContainerAppDataIngestModule'
+module containerAppDataIngest 'br/public:avm/res/app/container-app:0.16.0' = {
+  name: 'containerAppDataIngestModule'
   params: {
     name:                  _dataIngestContainerAppName
     location:              _location
-    environmentResourceId: ContainerEnv.outputs.resourceId
+    environmentResourceId: containerEnv.outputs.resourceId
 
     ingressExternal: true
     ingressTargetPort: 80
@@ -975,31 +962,31 @@ module ContainerAppDataIngest 'br/public:avm/res/app/container-app:0.16.0' = {
     containers: [
       {
         name     : 'dataingest'
-        image    : _dataIngestImage
+        image    : _dataIngestContainerImage
         resources: {
           cpu    : '0.5'
           memory : '1.0Gi'
         }
         env: [
           {
-            name  : 'APPCONFIG_ENDPOINT'
-            value : AppConfig.outputs.endpoint
+            name  : 'APP_CONFIG_ENDPOINT'
+            value : appConfig.outputs.endpoint
           }
         ]
       }
     ]
 
-    tags: union(_tags, { 'azd-service-name': 'dataIngest' })
+    tags: union(_tags, { 'azd-service-name': 'dataingest' })
   }
 }
 
 // Front-End Container App
-module ContainerAppFrontend 'br/public:avm/res/app/container-app:0.16.0' = {
-  name: 'ContainerAppFrontendModule'
+module containerAppFrontend 'br/public:avm/res/app/container-app:0.16.0' = {
+  name: 'containerAppFrontendModule'
   params: {
     name:                  _frontEndContainerAppName
     location:              _location
-    environmentResourceId: ContainerEnv.outputs.resourceId
+    environmentResourceId: containerEnv.outputs.resourceId
 
     ingressExternal: true
     ingressTargetPort: 80
@@ -1020,15 +1007,15 @@ module ContainerAppFrontend 'br/public:avm/res/app/container-app:0.16.0' = {
     containers: [
       {
         name     : 'frontend'
-        image    : _frontEndImage
+        image    : _frontEndContainerImage
         resources: {
           cpu    : '0.5'
           memory : '1.0Gi'
         }
         env: [
           {
-            name  : 'APPCONFIG_ENDPOINT'
-            value : AppConfig.outputs.endpoint
+            name  : 'APP_CONFIG_ENDPOINT'
+            value : appConfig.outputs.endpoint
           }
         ]
       }
@@ -1046,268 +1033,243 @@ module ContainerAppFrontend 'br/public:avm/res/app/container-app:0.16.0' = {
 //      Using custom modules for role assignments since they are not yet available in AVM
 //      They're proposed at the time of writing this template, but not yet published
 
-// Role assignment: APIM ← Cognitive Services OpenAI User (AI Services)
-module grantOpenAIUserRoleToAPIM 'core/security/role-assignment.bicep' = if (!_reuseAPIM && _configureRBAC) {
+// Role assignment: APIM ← Cognitive Services OpenAI User (AOAI Service)
+module grantOpenAIUserRoleToAPIM 'core/security/role-assignment.bicep' = if (!_reuseApim && _configureRbac) {
   name: 'grantOpenAIUserRoleToAPIM'
+  scope: resourceGroup()
   params: {
-    principalId        : APIMService.identity.principalId
+    principalId        : apimService.outputs.systemAssignedMIPrincipalId
     resourceType       : 'aiservices'
-    resourceName       : AIServices.outputs.name
+    resourceName       : _reuseAoai ? aoaiServiceExisting.name : aoaiService.outputs.name
+    resourceGroupName  : _reuseAoai ? _existingAoaiResourceGroup: resourceGroup().name
     roleDefinitionGuid : '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
   }
 }
 
-
 // Role assignment: AI Hub ← Key Vault Secrets User (Key Vault)
-module grantKVUserToAIHub 'core/security/role-assignment.bicep' = if (_configureRBAC) {
+module grantKVUserToAIHub 'core/security/role-assignment.bicep' = if (_configureRbac) {
   name: 'grantKVUserToAIHub'
+  scope: resourceGroup()  
   params: {
-    principalId            : AIHub.outputs.systemAssignedMIPrincipalId
+    principalId            : aiHub.outputs.systemAssignedMIPrincipalId
     resourceType           : 'keyvault'    
-    resourceName           : KeyVault.outputs.name
+    resourceName           : keyVault.outputs.name
+    resourceGroupName       : _reuseAifoundryHub ? _existingAifoundryHubResourceGroupName : resourceGroup().name    
     roleDefinitionGuid     : '4633458b-17de-408a-b874-0445c86b69e6'
   }
 }
 
 // Role assignment: AI Project ← Key Vault Secrets User (Key Vault)
-module grantKVUserToDataIngest 'core/security/role-assignment.bicep' = if (_configureRBAC) {
+module grantKVUserToDataIngest 'core/security/role-assignment.bicep' = if (_configureRbac) {
   name: 'grantKVUserToDataIngest'
+  scope: resourceGroup()  
   params: {
-    principalId            : AIProject.outputs.systemAssignedMIPrincipalId
+    principalId            : aiProject.outputs.systemAssignedMIPrincipalId
     resourceType           : 'keyvault'    
-    resourceName           : KeyVault.outputs.name
+    resourceName           : keyVault.outputs.name
     roleDefinitionGuid     : '4633458b-17de-408a-b874-0445c86b69e6'
   }
 }
 
 // Role assignment: AI Hub ← Storage Blob Data Contributor (AI Foundry Storage)
-module grantAIFoundryStorageContributorToHub 'core/security/role-assignment.bicep' = if (_configureRBAC) {
+module grantAIFoundryStorageContributorToHub 'core/security/role-assignment.bicep' = if (_configureRbac) {
   name: 'grantAIFoundryStorageContributorToHub'
+  scope: resourceGroup()  
   params: {
-    principalId            : AIHub.outputs.systemAssignedMIPrincipalId
+    principalId            : aiHub.outputs.systemAssignedMIPrincipalId
     resourceType           : 'storage'    
-    resourceName           : StorageAccountAIFoundry.outputs.name
+    resourceName           : storageAccountAIFoundry.outputs.name
     roleDefinitionGuid     : 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   }
 }
 
 // Role assignment: AI Project ← Storage Blob Data Contributor (AI Foundry Storage)
-module grantAiProjectStorageBlobDataContributor 'core/security/role-assignment.bicep' = if (_configureRBAC) {
+module grantAiProjectStorageBlobDataContributor 'core/security/role-assignment.bicep' = if (_configureRbac) {
   name: 'grantAiProjectStorageBlobDataContributor'
+  scope: resourceGroup()  
   params: {
-    principalId            : AIProject.outputs.systemAssignedMIPrincipalId
+    principalId            : aiProject.outputs.systemAssignedMIPrincipalId
     resourceType           : 'storage'    
-    resourceName           : StorageAccountAIFoundry.outputs.name
+    resourceName           : storageAccountAIFoundry.outputs.name
     roleDefinitionGuid     : 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   }
 }
 
 // Role assignment: Orchestrator Container App ← App Configuration Data Reader (App Configuration)
-module grantOrchestratorConfigDataReader 'core/security/role-assignment.bicep' = if (_configureRBAC) {
+module grantOrchestratorConfigDataReader 'core/security/role-assignment.bicep' = if (_configureRbac) {
   name: 'grantOrchestratorConfigDataReader'
+  scope: resourceGroup()  
   params: {
-    principalId         : ContainerAppOrchestrator.outputs.systemAssignedMIPrincipalId
+    principalId         : containerAppOrchestrator.outputs.systemAssignedMIPrincipalId
     resourceType        : 'appconfig'
-    resourceName        : AppConfig.outputs.name
+    resourceName        : appConfig.outputs.name
     roleDefinitionGuid  : '516239f1-63e1-4d78-a4de-a74fb236a071'
   }
 }
 
 // Role assignment: Frontend Container App ← App Configuration Data Reader (App Configuration)
-module grantFrontendConfigDataReader 'core/security/role-assignment.bicep' = if (_configureRBAC) {
+module grantFrontendConfigDataReader 'core/security/role-assignment.bicep' = if (_configureRbac) {
   name: 'grantFrontendConfigDataReader'
+  scope: resourceGroup()  
   params: {
-    principalId         : ContainerAppFrontend.outputs.systemAssignedMIPrincipalId
+    principalId         : containerAppFrontend.outputs.systemAssignedMIPrincipalId
     resourceType        : 'appconfig'
-    resourceName        : AppConfig.outputs.name
+    resourceName        : appConfig.outputs.name
     roleDefinitionGuid  : '516239f1-63e1-4d78-a4de-a74fb236a071'
   }
 }
 
 // Role assignment: Data Ingestion Container App ← App Configuration Data Reader (App Configuration)
-module grantDataIngestConfigDataReader 'core/security/role-assignment.bicep' = if (_configureRBAC) {
+module grantDataIngestConfigDataReader 'core/security/role-assignment.bicep' = if (_configureRbac) {
   name: 'grantDataIngestConfigDataReader'
+  scope: resourceGroup()  
   params: {
-    principalId         : ContainerAppDataIngest.outputs.systemAssignedMIPrincipalId
+    principalId         : containerAppDataIngest.outputs.systemAssignedMIPrincipalId
     resourceType        : 'appconfig'
-    resourceName        : AppConfig.outputs.name
+    resourceName        : appConfig.outputs.name
     roleDefinitionGuid  : '516239f1-63e1-4d78-a4de-a74fb236a071'
   }
 }
-
-// Role assignment: Principal ← Azure AI Developer (AI Hub)
-module grantPrincipalAiHubDeveloper 'core/security/role-assignment.bicep' = if (_configureRBAC) {
-  name: 'grantPrincipalAiHubDeveloper'
-  params: {
-    principalId         : _principalId
-    resourceType        : 'aifoundry'
-    resourceName        : AIHub.outputs.name 
-    roleDefinitionGuid  : '64702f94-c441-49e6-a78b-ef80e0188fee'
-
-
-  }
-}
-
-// Role assignment: Principal ← Azure AI Developer (AI Project)
-// module grantPrincipalAiProjectDeveloper 'core/security/role-assignment.bicep' = if (_configureRBAC) {
-//   name: 'grantPrincipalAiProjectDeveloper'
-//   params: {
-//     principalId         : _principalId
-//     resourceType        : 'aifoundry'
-//     resourceName        : AIProject.outputs.name 
-//     roleDefinitionGuid  : '64702f94-c441-49e6-a78b-ef80e0188fee'
-//   }
-// }
 
 //////////////////////////////////////////////////////////////////////////
 // OUTPUTS
 //////////////////////////////////////////////////////////////////////////
 
-// ============================================================================
-// Deployment Context
-// ============================================================================
-output AZURE_DEPLOYMENT_NAME                 string = deployment().name
-output AZURE_ENV_NAME                        string = _azureEnvironmentName
-output AZURE_LOCATION                        string = _location
-output AZURE_RESOURCE_GROUP                  string = resourceGroup().name
-output AZURE_SUBSCRIPTION_ID                 string = subscription().subscriptionId
-output AZURE_TENANT_ID                       string = tenant().tenantId
-output AZURE_CLOUD                           string = _azureCloud
-output AZURE_CONFIGURE_RBAC                  string = string(_configureRBAC)
+// Outputs for azd post-provision hooks
+//////////////////////////////////////////////////////////////////////////
+output AZURE_SUBSCRIPTION_ID     string = subscription().subscriptionId
+output AZURE_DEPLOYMENT_NAME     string = deployment().name
+output AZURE_RESOURCE_GROUP      string = resourceGroup().name
+output AZURE_APP_CONFIG_ENDPOINT string = appConfig.outputs.endpoint 
+output RUN_AOAI_RAI_POLICIES     string = string(!_reuseAoai)
+output RUN_SEARCH_SETUP          string = string(_runSearchSetup)
+output AZURE_NETWORK_ISOLATION   string = string(_networkIsolation)
 
-// ============================================================================
-// Container Apps
-// ============================================================================
-output AZURE_FRONTEND_CONTAINER_APP_NAME     string = _frontEndContainerAppName
-output AZURE_ORCHESTRATOR_CONTAINER_APP_NAME string = _orchestratorContainerAppName
-output AZURE_DATA_INGEST_CONTAINER_APP_NAME  string = _dataIngestContainerAppName
-output AZURE_CONTAINER_ENV_NAME              string = _containerEnvName
-output AZURE_CONTAINER_REGISTRY_URL          string = ContainerRegistry.outputs.loginServer
+// Infra Configuration
+//////////////////////////////////////////////////////////////////////////
+output PROVISION_CONFIG object = {
+  AZURE_AOAI_RESOURCE_GROUP                  : _aoaiResourceGroup        
+  AZURE_APP_CONFIG_ENDPOINT                  : appConfig.outputs.endpoint
+  AZURE_APP_CONFIG_NAME                      : _appConfigName
+  AZURE_APP_INSIGHTS_NAME                    : _appInsightsName
+  AZURE_APIM_OPENAI_API_DISPLAY_NAME         : _aoaiApiDisplayName
+  AZURE_APIM_OPENAI_API_NAME                 : _aoaiApiName
+  AZURE_APIM_OPENAI_API_PATH                 : _aoaiApiPath
+  AZURE_APIM_OPENAI_SUBSCRIPTION_DESC        : _aoaiSubscriptionDescription
+  AZURE_APIM_OPENAI_SUBSCRIPTION_NAME        : _aoaiSubscriptionName
+  AZURE_APIM_PUBLISHER_EMAIL                 : _apimPublisherEmail
+  AZURE_APIM_PUBLISHER_NAME                  : _apimPublisherName
+  AZURE_APIM_SERVICE_NAME                    : _apimResourceName
+  AZURE_CHAT_DEPLOYMENT_CAPACITY             : string(_chatDeploymentCapacity)
+  AZURE_CHAT_DEPLOYMENT_NAME                 : _chatDeploymentName
+  AZURE_CHAT_MODEL_DEPLOYMENT_TYPE           : _chatModelDeploymentType
+  AZURE_CHAT_MODEL_VERSION                   : _chatModelVersion
+  AZURE_CHAT_NUM_TOKENS                      : _chatNumTokens
+  AZURE_CONFIGURE_RBAC                       : string(_configureRbac)
+  AZURE_CONTAINER_ENV_NAME                   : _containerEnvName
+  AZURE_CONTAINER_REGISTRY_NAME              : _containerRegistryName
+  AZURE_CONTAINER_REGISTRY_ENDPOINT          : containerRegistry.outputs.loginServer  
+  AZURE_CLOUD                                : _azureCloud
+  AZURE_DATA_INGEST_CONTAINER_APP_NAME       : _dataIngestContainerAppName
+  AZURE_DATA_INGEST_CONTAINER_IMAGE          : _dataIngestContainerImage
+  AZURE_DATABASE_ACCOUNT_NAME                : _dbAccountName
+  AZURE_DATABASE_CONVERSATION_CONTAINER_NAME : _conversationContainerName
+  AZURE_DATABASE_DATASOURCES_CONTAINER_NAME  : _datasourcesContainerName
+  AZURE_DATABASE_NAME                        : _dbDatabaseName
+  AZURE_EMBEDDINGS_DEPLOYMENT_CAPACITY       : string(_embeddingsDeploymentCapacity)
+  AZURE_EMBEDDINGS_DEPLOYMENT_TYPE           : _embeddingsDeploymentType
+  AZURE_EMBEDDINGS_MODEL_VERSION             : _embeddingsModelVersion
+  AZURE_EMBEDDINGS_VECTOR_DIMENSIONS         : _embeddingsVectorDimensions
+  AZURE_ENV_NAME                             : _environmentName
+  AZURE_EXISTING_AI_FOUNDRY_HUB_NAME         : _existingAifoundryHubName
+  AZURE_EXISTING_AI_FOUNDRY_HUB_RG           : _existingAifoundryHubResourceGroupName
+  AZURE_EXISTING_AOAI_NAME                   : _existingAoaiName
+  AZURE_EXISTING_AOAI_RESOURCE_GROUP         : _existingAoaiResourceGroup
+  AZURE_FRONTEND_CONTAINER_APP_NAME          : _frontEndContainerAppName
+  AZURE_FRONT_END_CONTAINER_IMAGE            : _frontEndContainerImage
+  AZURE_LOCATION                             : _location
+  AZURE_NETWORK_ISOLATION                    : string(_networkIsolation)
+  AZURE_OPENAI_API_VERSION                   : _aoaiApiVersion
+  AZURE_OPENAI_CHAT_MODEL_NAME               : _chatModelName
+  AZURE_OPENAI_EMBEDDING_DEPLOYMENT          : _embeddingsDeploymentName
+  AZURE_OPENAI_EMBEDDING_MODEL_NAME          : _embeddingsModelName
+  AZURE_OPENAI_SERVICE_NAME                  : _aoaiServiceName
+  AZURE_ORCHESTRATOR_CONTAINER_APP_NAME      : _orchestratorContainerAppName
+  AZURE_ORCHESTRATOR_CONTAINER_IMAGE         : _orchestratorContainerImage
+  AZURE_REUSE_AI_FOUNDRY_HUB                 : _reuseAifoundryHub
+  AZURE_REUSE_AOAI                           : _reuseAoai
+  AZURE_REUSE_APIM                           : _reuseApim
+  AZURE_RESOURCE_GROUP                       : resourceGroup().name
+  AZURE_SEARCH_ANALYZER_NAME                 : _searchAnalyzerName
+  AZURE_SEARCH_API_VERSION                   : _searchApiVersion
+  AZURE_SEARCH_ENDPOINT                      : searchService.outputs.endpoint
+  AZURE_SEARCH_INDEX_INTERVAL                : _searchIndexInterval
+  AZURE_SEARCH_INDEX_NAME                    : _searchIndexName
+  AZURE_SEARCH_SERVICE_NAME                  : _searchServiceName
+  AZURE_STORAGE_ACCOUNT_CONTAINER_DOCS       : _storageAccountContainerDocs
+  AZURE_STORAGE_ACCOUNT_CONTAINER_IMAGES     : _storageAccountContainerImages
+  AZURE_SUBSCRIPTION_ID                      : subscription().subscriptionId
+  AZURE_TENANT_ID                            : tenant().tenantId
 
-// ============================================================================
-// Azure AI Services & OpenAI
-// ============================================================================
-output AZURE_AI_SERVICES_NAME                string = AIServices.outputs.name
-output AZURE_OPENAI_SERVICE_NAME             string = _reuseAOAI? OAIServiceExisting.name : OAIService.outputs.name
-output AZURE_OPENAI_API_VERSION              string = _AOAIAPIVersion
-output AZURE_OPENAI_CHAT_MODEL_NAME          string = _chatModelName
-output AZURE_OPENAI_EMBEDDING_MODEL_NAME     string = _embeddingsModelName
-output AZURE_OPENAI_EMBEDDING_DEPLOYMENT     string = _embeddingsDeploymentName
-
-// Chat Model Deployment
-output AZURE_CHAT_DEPLOYMENT_CAPACITY        string = string(_chatDeploymentCapacity)
-output AZURE_CHAT_DEPLOYMENT_NAME            string = _chatDeploymentName
-output AZURE_CHAT_MODEL_DEPLOYMENT_TYPE      string = _chatModelDeploymentType
-output AZURE_CHAT_MODEL_VERSION              string = _chatModelVersion
-output AZURE_CHAT_NUM_TOKENS                 string = _chatNumTokens
-
-// Embeddings Deployment
-output AZURE_EMBEDDINGS_DEPLOYMENT_CAPACITY  string = string(_embeddingsDeploymentCapacity)
-output AZURE_EMBEDDINGS_DEPLOYMENT_TYPE      string = _embeddingsDeploymentType
-output AZURE_EMBEDDINGS_MODEL_VERSION        string = _embeddingsModelVersion
-output AZURE_EMBEDDINGS_VECTOR_DIMENSIONS    string = _embeddingsVectorDimensions
-
-// ============================================================================
-// AI Hub & Project
-// ============================================================================
-output AZURE_AI_FOUNDRY_HUB_NAME             string = _reuseAIFoundryHub ? _existingAIFoundryHubName : AIHub.outputs.name
-output AZURE_AI_FOUNDRY_PROJECT_NAME         string = AIProject.outputs.name
-output AZURE_AI_FOUNDRY_STORAGE_ACCOUNT_NAME string = StorageAccountAIFoundry.outputs.name
-
-// ============================================================================
-// App Configuration & Monitoring
-// ============================================================================
-output AZURE_APP_CONFIG_NAME                 string = AppConfig.outputs.name
-
-// ============================================================================
-// API Management (APIM)
-// ============================================================================
-output AZURE_APIM_SERVICE_NAME                string = _reuseAPIM ? _existingAPIMName : APIMService.name
-output AZURE_APIM_OPENAI_API_DISPLAY_NAME     string = _AOAIAPIDisplayName
-output AZURE_APIM_OPENAI_API_NAME             string = _AOAIAPIName
-output AZURE_APIM_OPENAI_API_PATH             string = _AOAIAPIPath
-output AZURE_APIM_PUBLISHER_EMAIL             string = _apimPublisherEmail
-output AZURE_APIM_PUBLISHER_NAME              string = _apimPublisherName
-output AZURE_APIM_GATEWAY_URL                 string = _apimGatewayUrl
-output AZURE_APIM_OPENAI_SUBSCRIPTION_NAME    string = _AOAISubscriptionName
-output AZURE_APIM_OPENAI_SUBSCRIPTION_DESC    string = _AOAISubscriptionDescription
-output AZURE_APIM_SUBSCRIPTION_SECRET_NAME    string = _AOAISubscriptionSecretName
-
-// ============================================================================
-// Azure Search
-// ============================================================================
-output AZURE_SEARCH_SERVICE_NAME             string = SearchService.outputs.name
-output AZURE_SEARCH_INDEX_NAME               string = _searchIndexName
-output AZURE_SEARCH_API_VERSION              string = _searchAPIVersion
-output AZURE_SEARCH_ENDPOINT                 string = SearchService.outputs.endpoint
-
-// ============================================================================
-// Storage
-// ============================================================================
-output AZURE_STORAGE_ACCOUNT_NAME             string = _solutionStorageAccountName
-output AZURE_STORAGE_ACCOUNT_CONTAINER_DOCS   string = _storageAccountContainerDocs
-output AZURE_STORAGE_ACCOUNT_CONTAINER_IMAGES string = _storageAccountContainerImages
-output AZURE_CONTAINER_REGISTRY_NAME          string = ContainerRegistry.outputs.name
-
-// ============================================================================
-// Key Vault
-// ============================================================================
-output AZURE_KEY_VAULT_NAME                 string = KeyVault.outputs.name
-output AZURE_AOAI_SUBSCRIPTION_SECRET_NAME  string = _AOAISubscriptionSecretName
-output AZURE_KEY_VAULT_URI                  string = KeyVault.outputs.uri
-
-// ============================================================================
-// Reuse Flags and Existing Resource Info
-// ============================================================================
-output AZURE_REUSE_AI_FOUNDRY_HUB                   string = string(_reuseAIFoundryHub)
-output AZURE_EXISTING_AI_FOUNDRY_HUB_RESOURCE_GROUP string = _existingAIFoundryHubResourceGroup
-output AZURE_EXISTING_AI_FOUNDRY_HUB_NAME           string = _existingAIFoundryHubName
-
-output AZURE_REUSE_AOAI                             string = string(_reuseAOAI)
-output AZURE_EXISTING_AOAI_RESOURCE_GROUP           string = _existingAOAIResourceGroup
-output AZURE_EXISTING_AOAI_NAME                     string = _existingAOAIName
-
-output AZURE_REUSE_APIM                             string = string(_reuseAPIM)
-output AZURE_EXISTING_APIM_RESOURCE_GROUP           string = _existingAPIMResourceGroup
-output AZURE_EXISTING_APIM_NAME                     string = _existingAPIMName
-
-//–– Dynamic AppConfig KV map (single source of truth)
-output appConfigKVs object = {
-  AI_FOUNDRY_PROJECT_CONNECTION_STRING: _AIProjectConnectionString
-  AI_SERVICES_NAME                    : AIServices.outputs.name
-  APIM_OPENAI_API_PATH                : _AOAIAPIPath
-  APP_CONFIG_ENDPOINT                 : AppConfig.outputs.endpoint
-  APP_CONFIG_NAME                     : _appConfigName
-  APP_INSIGHTS_NAME                   : _appInsightsName
-  CONTAINER_REGISTRY_NAME             : _containerRegistryName
-  CONTAINER_REGISTRY_URL              : ContainerRegistry.outputs.loginServer
-  DATABASE_ACCOUNT_NAME               : _dbAccountName
-  DATABASE_CONVERSATION_CONTAINER_NAME: _conversationContainerName
-  DATABASE_DATASOURCES_CONTAINER_NAME : _datasourcesContainerName
-  DATABASE_NAME                       : _dbDatabaseName
-  DATA_INGEST_CONTAINER_APP_NAME      : _dataIngestContainerAppName
-  DOC_INTELLIGENCE_API_VERSION        : _docIntelAPIVersion
-  AZURE_ENV_NAME                      : _azureEnvironmentName
-  FRONTEND_CONTAINER_APP_NAME         : _frontEndContainerAppName
-  AZURE_KEY_VAULT_URI                 : KeyVault.outputs.uri    
-  LOCATION                            : _location
-  OPENAI_API_VERSION                  : _AOAIAPIVersion
-  OPENAI_CHAT_DEPLOYMENT              : _chatDeploymentName
-  OPENAI_CHAT_MODEL_NAME              : _chatModelName
-  OPENAI_EMBEDDING_DEPLOYMENT         : _embeddingsDeploymentName
-  OPENAI_EMBEDDING_MODEL_NAME         : _embeddingsModelName
-  OPENAI_SERVICE_NAME                 : _reuseAOAI ? OAIServiceExisting.name : OAIService.outputs.name
-  ORCHESTRATOR_CONTAINER_APP_NAME     : _orchestratorContainerAppName
-  SEARCH_API_VERSION                  : _searchAPIVersion
-  SEARCH_SERVICE_NAME                 : SearchService.outputs.name
-  STORAGE_ACCOUNT_CONTAINER_DOCS      : _storageAccountContainerDocs
-  STORAGE_ACCOUNT_CONTAINER_IMAGES    : _storageAccountContainerImages
-  STORAGE_ACCOUNT_NAME                : _solutionStorageAccountName
-  SUBSCRIPTION_ID                     : subscription().subscriptionId
-  CHAT_NUM_TOKENS                     : _chatNumTokens
-  CHUNKING_MIN_CHUNK_SIZE             : _chunkingMinChunkSize
-  CHUNKING_NUM_TOKENS                 : _chunkingNumTokens
-  CHUNKING_TOKEN_OVERLAP              : _chunkingTokenOverlap
-  EMBEDDINGS_VECTOR_DIMENSIONS        : _embeddingsVectorDimensions
-  SEARCH_INDEX_NAME                   : _searchIndexName
+  // AI Hub & Project
+  AZURE_AI_FOUNDRY_HUB_NAME                  : _aiHubName
+  AZURE_AI_FOUNDRY_PROJECT_AISEARCH_CONN_NAME: _aiSearchConnectionName
+  AZURE_AI_FOUNDRY_PROJECT_AISERVICES_CONN_NAME: _aiServicesConnectionName
+  AZURE_AI_FOUNDRY_PROJECT_AOAI_CONN_NAME    : _aoaiConnectionName
+  AZURE_AI_FOUNDRY_PROJECT_CONNECTION_STRING : _aiProjectConnectionString
+  AZURE_AI_FOUNDRY_PROJECT_NAME              : _aiProjectName
+  AZURE_AI_FOUNDRY_STORAGE_ACCOUNT_NAME      : _aiFoundryStorageAccountName
+  AZURE_AI_SERVICES_NAME                     : _aiServicesName
+  AZURE_AI_SERVICES_ENDPOINT                 : aiServices.outputs.endpoint
+  AZURE_SOLUTION_STORAGE_ACCOUNT_NAME        : _solutionStorageAccountName
 }
+
+// App Configuration (runtime settings)
+//////////////////////////////////////////////////////////////////////////
+output APP_SETTINGS object = {
+  AI_FOUNDRY_PROJECT_AISEARCH_CONN_NAME     : _aiSearchConnectionName
+  AI_FOUNDRY_PROJECT_AISERVICES_CONN_NAME   : _aiServicesConnectionName
+  AI_FOUNDRY_PROJECT_AOAI_CONN_NAME         : _aoaiConnectionName
+  AI_FOUNDRY_PROJECT_CONNECTION_STRING      : _aiProjectConnectionString
+  AI_SERVICES_NAME                          : aiServices.outputs.name
+  APP_CONFIG_ENDPOINT                       : appConfig.outputs.endpoint
+  APP_CONFIG_NAME                           : _appConfigName
+  APP_INSIGHTS_NAME                         : _appInsightsName
+  APIM_OPENAI_API_PATH                      : _aoaiApiPath
+  CHAT_NUM_TOKENS                           : _chatNumTokens
+  CHUNKING_MIN_CHUNK_SIZE                   : _chunkingMinChunkSize
+  CHUNKING_NUM_TOKENS                       : _chunkingNumTokens
+  CHUNKING_TOKEN_OVERLAP                    : _chunkingTokenOverlap
+  CONTAINER_REGISTRY_NAME                   : _containerRegistryName
+  CONTAINER_REGISTRY_URL                    : containerRegistry.outputs.loginServer
+  DATABASE_ACCOUNT_NAME                     : _dbAccountName
+  DATABASE_CONVERSATION_CONTAINER_NAME      : _conversationContainerName
+  DATABASE_DATASOURCES_CONTAINER_NAME       : _datasourcesContainerName
+  DATABASE_NAME                             : _dbDatabaseName
+  DATA_INGEST_CONTAINER_APP_NAME            : _dataIngestContainerAppName
+  DATA_INGEST_CONTAINER_APP_ENDPOINT        : containerAppDataIngest.outputs.fqdn
+  DOC_INTELLIGENCE_API_VERSION              : _docIntelApiVersion
+  EMBEDDINGS_VECTOR_DIMENSIONS              : _embeddingsVectorDimensions
+  ENVIRONMENT_NAME                          : _environmentName
+  FRONTEND_CONTAINER_APP_NAME               : _frontEndContainerAppName
+  KEY_VAULT_URI                             : keyVault.outputs.uri
+  LOCATION                                  : _location
+  OPENAI_API_VERSION                        : _aoaiApiVersion
+  OPENAI_CHAT_DEPLOYMENT                    : _chatDeploymentName
+  OPENAI_CHAT_MODEL_NAME                    : _chatModelName
+  OPENAI_EMBEDDING_DEPLOYMENT               : _embeddingsDeploymentName
+  OPENAI_EMBEDDING_MODEL_NAME               : _embeddingsModelName
+  OPENAI_SERVICE_NAME                       : _reuseAoai ? aoaiServiceExisting.name : aoaiService.outputs.name
+  ORCHESTRATOR_CONTAINER_APP_NAME           : _orchestratorContainerAppName
+  ORCHESTRATOR_CONTAINER_APP_ENDPOINT       : containerAppOrchestrator.outputs.fqdn
+  RESOURCE_GROUP                            : resourceGroup().name
+  SEARCH_API_VERSION                        : _searchApiVersion
+  SEARCH_ENDPOINT                           : searchService.outputs.endpoint
+  SEARCH_INDEX_NAME                         : _searchIndexName
+  SEARCH_SERVICE_NAME                       : searchService.outputs.name
+  STORAGE_ACCOUNT_CONTAINER_DOCS            : _storageAccountContainerDocs
+  STORAGE_ACCOUNT_CONTAINER_IMAGES          : _storageAccountContainerImages
+  STORAGE_ACCOUNT_NAME                      : _solutionStorageAccountName
+  SUBSCRIPTION_ID                           : subscription().subscriptionId
+}
+

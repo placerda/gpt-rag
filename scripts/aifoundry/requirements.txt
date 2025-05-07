@@ -1,0 +1,4 @@
+azure-identity==1.21.0
+azure-appconfiguration==1.7.1
+azure-ai-ml==1.26.5            
+azure-mgmt-apimanagement==5.0.0
