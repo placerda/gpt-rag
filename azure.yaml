@@ -10,18 +10,18 @@ hooks:
   preprovision:
     posix:
       shell: sh
-      run: scripts/hooks/preprovision.sh
+      run: hooks/preProvision.sh
       interactive: true
     windows:
       shell: pwsh
-      run: scripts/hooks/preprovision.ps1
+      run: hooks/preProvision.ps1
       interactive: true
   postprovision:
     posix:
       shell: sh
-      run: scripts/hooks/postprovision.sh
+      run: hooks/postProvision.sh
       interactive: true
     windows:
       shell: pwsh
-      run: scripts/hooks/postprovision.ps1
+      run: hooks/postProvision.ps1
       interactive: true

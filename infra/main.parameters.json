@@ -8,11 +8,26 @@
     "principalId":                           { "value": "${AZURE_PRINCIPAL_ID}" },
     "configureRbac":                         { "value": "${AZURE_CONFIGURE_RBAC}" },
 
+    "installAiFoundry":                     { "value": "${AZURE_INSTALL_AI_FOUNDRY}" },
+    "installApim":                          { "value": "${AZURE_INSTALL_APIM}" },
+    "installAoai":                          { "value": "${AZURE_INSTALL_AOAI}" },
+    "installAppConfig":                     { "value": "${AZURE_INSTALL_APP_CONFIG}" },
+    "installKeyVault":                      { "value": "${AZURE_INSTALL_KEY_VAULT}" },
+    "installLogAnalytics":                  { "value": "${AZURE_INSTALL_LOG_ANALYTICS}" },
+    "installAppInsights":                   { "value": "${AZURE_INSTALL_APP_INSIGHTS}" },
+    "installSearchService":                 { "value": "${AZURE_INSTALL_SEARCH_SERVICE}" },
+    "installStorageAccount":                { "value": "${AZURE_INSTALL_STORAGE_ACCOUNT}" },
+    "installCosmosDb":                      { "value": "${AZURE_INSTALL_COSMOS_DB}" },
+    "installContainerApps":                 { "value": "${AZURE_INSTALL_CONTAINER_APPS}" },
+    "installContainerRegistry":             { "value": "${AZURE_INSTALL_CONTAINER_REGISTRY}" },
+    "installAiServices":                    { "value": "${AZURE_INSTALL_AI_SERVICES}" },
+    "installContainerEnv":                  { "value": "${AZURE_INSTALL_CONTAINER_ENV}" },
+
     "aiFoundryStorageAccountName":           { "value": "${AZURE_AI_FOUNDRY_STORAGE_ACCOUNT_NAME}" },
     "aiHubName":                             { "value": "${AZURE_AI_FOUNDRY_HUB_NAME}" },
     "aiProjectName":                         { "value": "${AZURE_AI_FOUNDRY_PROJECT_NAME}" },
     "aiServicesName":                        { "value": "${AZURE_AI_SERVICES_NAME}" },
-    "aoaiServiceName":                       { "value": "${AZURE_OPENAI_SERVICE_NAME}" },
+    "aoaiServiceName":                       { "value": "${AZURE_AOAI_SERVICE_NAME}" },
     "apimResourceName":                      { "value": "${AZURE_APIM_SERVICE_NAME}" },
     "appConfigName":                         { "value": "${AZURE_APP_CONFIG_NAME}" },
     "appInsightsName":                       { "value": "${AZURE_APP_INSIGHTS_NAME}" },
@@ -20,63 +35,94 @@
     "containerRegistryName":                 { "value": "${AZURE_CONTAINER_REGISTRY_NAME}" },
     "conversationContainerName":             { "value": "${AZURE_DATABASE_CONVERSATION_CONTAINER_NAME}" },
     "dataIngestContainerAppName":            { "value": "${AZURE_DATA_INGEST_CONTAINER_APP_NAME}" },
-    "dataIngestContainerImage":              { "value": "${AZURE_DATA_INGEST_CONTAINER_IMAGE}" },
     "datasourcesContainerName":              { "value": "${AZURE_DATABASE_DATASOURCES_CONTAINER_NAME}" },
     "dbAccountName":                         { "value": "${AZURE_DATABASE_ACCOUNT_NAME}" },
     "dbDatabaseName":                        { "value": "${AZURE_DATABASE_NAME}" },
     "frontEndContainerAppName":              { "value": "${AZURE_FRONTEND_CONTAINER_APP_NAME}" },
-    "frontEndContainerImage":                { "value": "${AZURE_FRONT_END_CONTAINER_IMAGE}" },
     "keyVaultName":                          { "value": "${AZURE_KEY_VAULT_NAME}" },
     "logAnalyticsWorkspaceName":             { "value": "${AZURE_LOG_ANALYTICS_WORKSPACE_NAME}" },
     "orchestratorContainerAppName":          { "value": "${AZURE_ORCHESTRATOR_CONTAINER_APP_NAME}" },
     "searchServiceName":                     { "value": "${AZURE_SEARCH_SERVICE_NAME}" },
     "solutionStorageAccountName":            { "value": "${AZURE_STORAGE_ACCOUNT_NAME}" },
 
-    "aiFoundryHubReuse":                     { "value": "${AZURE_REUSE_AI_FOUNDRY_HUB}" },
-    "existingAifoundryHubResourceGroup":     { "value": "${AZURE_EXISTING_AI_FOUNDRY_HUB_RESOURCE_GROUP}" },
-    "existingAifoundryHubName":              { "value": "${AZURE_EXISTING_AI_FOUNDRY_HUB_NAME}" },
-    "reuseApim":                             { "value": "${AZURE_REUSE_APIM}" },
-    "reuseAoai":                             { "value": "${AZURE_REUSE_AOAI}" },
-    "existingAoaiResourceGroup":             { "value": "${AZURE_EXISTING_AOAI_RESOURCE_GROUP}" },
-    "existingAoaiName":                      { "value": "${AZURE_EXISTING_AOAI_NAME}" },
-    
     "apimPublisherEmail":                    { "value": "${AZURE_APIM_PUBLISHER_EMAIL}" },
     "apimPublisherName":                     { "value": "${AZURE_APIM_PUBLISHER_NAME}" },
     "apimSku":                               { "value": "${AZURE_APIM_SKU}" },
-    "aoaiApiName":                           { "value": "${AZURE_APIM_OPENAI_API_NAME}" },
-    "aoaiApiDisplayName":                    { "value": "${AZURE_APIM_OPENAI_API_DISPLAY_NAME}" },
-    "aoaiApiPath":                           { "value": "${AZURE_APIM_OPENAI_API_PATH}" },
-    "aoaiSubscriptionName":                  { "value": "${AZURE_APIM_OPENAI_SUBSCRIPTION_NAME}" },
-    "aoaiSubscriptionDescription":           { "value": "${AZURE_APIM_OPENAI_SUBSCRIPTION_DESC}" },
+    "apimAoaiApiName":                       { "value": "${AZURE_APIM_AOAI_API_NAME}" },
+    "apimAoaiApiDisplayName":                { "value": "${AZURE_APIM_AOAI_API_DISPLAY_NAME}" },
+    "apimAoaiApiPath":                       { "value": "${AZURE_APIM_AOAI_API_PATH}" },
+    "apimAoaiSubscriptionName":              { "value": "${AZURE_APIM_AOAI_SUBSCRIPTION_NAME}" },
+    "apimAoaiSubscriptionDisplayName":       { "value": "${AZURE_APIM_AOAI_SUBSCRIPTION_DISPLAY_NAME}" },
+
     
-    "aoaiConnectionName":                    { "value": "${AZURE_AI_FOUNDRY_PROJECT_AOAI_CONN_NAME}" },
-    "aiServicesConnectionName":              { "value": "${AZURE_AI_FOUNDRY_PROJECT_AISERVICES_CONN_NAME}" },
-    "aiSearchConnectionName":                { "value": "${AZURE_AI_FOUNDRY_PROJECT_AISEARCH_CONN_NAME}" },
+    "aoaiApiVersion":                       { "value": "${AZURE_AOAI_API_VERSION}" },
+    "searchApiVersion":                     { "value": "${AZURE_SEARCH_API_VERSION}" },
 
-    "searchIndexName":                      { "value": "${AZURE_SEARCH_INDEX_NAME}" },
-    "searchAnalyzerName":                   { "value": "${AZURE_SEARCH_ANALYZER_NAME}" },
-    "searchIndexInterval":                  { "value": "${AZURE_SEARCH_INDEX_INTERVAL}" },
+    "aoaiDeploymentList":{
+      "value": [
+        {
+          "name": "chat",
+          "model": "gpt-4o-mini",
+          "type": "GlobalStandard",
+          "version": "2024-07-18",          
+          "capacity": 40,
+          "internal_name": "AZURE_CHAT_DEPLOYMENT_NAME"
+        },
+        {
+          "name": "text-embedding",
+          "model": "text-embedding-3-large",
+          "type": "Standard",
+          "version": "1",          
+          "capacity": 40,
+          "internal_name": "AZURE_EMBEDDING_DEPLOYMENT_NAME"
+        }
+      ]
+    },
 
-    "docIntelApiVersion":                    { "value": "${AZURE_DOC_INTELLIGENCE_API_VERSION}" },
-    "openAiApiVersion":                      { "value": "${AZURE_OPENAI_API_VERSION}" },
-    "searchApiVersion":                      { "value": "${AZURE_SEARCH_API_VERSION}" },
+    "containerAppsList": {
+      "value": [
+        {
+          "name": "",
+          "service_name": "orchestrator",
+          "internal_name": "ORCHESTRATOR_CONTAINER_APP"          
+        },
+        {
+          "name": "",           
+          "service_name": "frontend",
+          "internal_name": "FRONT_END_CONTAINER_APP"                   
+        },
+        {
+          "name": "",               
+          "service_name": "dataingest",
+          "internal_name": "DATA_INGEST_CONTAINER_APP"                    
+        }
+      ]
+    }, 
 
-    "chatDeploymentCapacity":                { "value": "${AZURE_CHAT_DEPLOYMENT_CAPACITY}" },
-    "chatDeploymentName":                    { "value": "${AZURE_CHAT_DEPLOYMENT_NAME}" },
-    "chatModelDeploymentType":               { "value": "${AZURE_CHAT_MODEL_DEPLOYMENT_TYPE}" },
-    "chatModelName":                         { "value": "${AZURE_OPENAI_CHAT_MODEL_NAME}" },
-    "chatModelVersion":                      { "value": "${AZURE_CHAT_MODEL_VERSION}" },
+    "storageAccountContainersList": {
+      "value": [
+        {
+          "name": "documents-images"
+        },
+        {
+          "name": "documents"
+        },
+        {
+          "name": "nl2sql"
+        }
+      ]
+    },  
 
-    "embeddingsDeploymentCapacity":          { "value": "${AZURE_EMBEDDINGS_DEPLOYMENT_CAPACITY}" },
-    "embeddingsDeploymentName":              { "value": "${AZURE_OPENAI_EMBEDDING_DEPLOYMENT}" },
-    "embeddingsDeploymentType":              { "value": "${AZURE_EMBEDDINGS_DEPLOYMENT_TYPE}" },
-    "embeddingsModelName":                   { "value": "${AZURE_OPENAI_EMBEDDING_MODEL_NAME}" },
-    "embeddingsModelVersion":                { "value": "${AZURE_EMBEDDINGS_MODEL_VERSION}" },
-    "embeddingsVectorDimensions":            { "value": "${AZURE_EMBEDDINGS_VECTOR_DIMENSIONS}" },
-
-    "chunkingMinChunkSize":                  { "value": "${AZURE_CHUNKING_MIN_CHUNK_SIZE}" },
-    "chunkingNumTokens":                     { "value": "${AZURE_CHUNKING_NUM_TOKENS}" },
-    "chunkingTokenOverlap":                  { "value": "${AZURE_CHUNKING_TOKEN_OVERLAP}" },
-    "chatNumTokens":                         { "value": "${AZURE_CHAT_NUM_TOKENS}" }
+    "databaseContainersList": {
+      "value": [
+        {
+          "name": "conversations"
+        },
+        {
+          "name": "datasources"
+        }
+      ]
+    }  
+    
   }
 }

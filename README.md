@@ -26,7 +26,7 @@ The **Enterprise RAG** Solution Accelerator (GPT-RAG) offers a robust architectu
 
 For more secure and isolated deployments, you can opt for the Zero Trust architecture. This architecture is ideal for production environments where network isolation and stringent security measures are highly valued.
 
- ![Zero Trust Architecture](media/architecture-GPT-RAG-ZeroTrust-LZ.png)
+ ![Zero Trust Architecture](media/architecture-zero-trust.png)
 
 ## Contributing
 

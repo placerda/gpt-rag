@@ -8,34 +8,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 ###############################################################################
-# 1) Load Environment Variables from Previous Deployment (if available)
-###############################################################################
-echo
-echo "📑 Loading environment variables from previous deployment (if available)…"
-
-if [ -z "$AZURE_APP_CONFIG_ENDPOINT" ]; then
-  echo "⚠️  Skipping: AZURE_APP_CONFIG_ENDPOINT is not set."
-else
-  echo "📦 Creating temporary virtual environment…"
-  python -m venv scripts/appconfig/.venv_temp
-  . scripts/appconfig/.venv_temp/bin/activate
-
-  echo "⬇️  Installing requirements…"
-  pip install --upgrade pip
-  pip install -r scripts/appconfig/requirements.txt
-
-  echo "🚀 Running loadconfig.py…"
-  python -m scripts.appconfig.loadconfig
-
-  echo "🧹 Cleaning up…"
-  deactivate
-  rm -rf scripts/appconfig/.venv_temp
-
-  echo "✅ Environment variables loaded from App Configuration."
-fi
-
-###############################################################################
-# 2) Network Isolation Warning
+# 1) Network Isolation Warning
 ###############################################################################
 
 # Skip warning if AZURE_SKIP_NETWORK_ISOLATION_WARNING is set

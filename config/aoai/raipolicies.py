@@ -1,14 +1,30 @@
 #!/usr/bin/env python3
+"""
+Configure RAI blocklist and policy for Azure OpenAI
+
+This script reads configuration from Azure App Configuration, loads blocklist and policy
+definitions from JSON files, and applies them to the specified Azure OpenAI deployment.
+
+Steps:
+1. Validate required env vars:
+   - AZURE_APP_CONFIG_ENDPOINT
+
+2. Authenticate via Azure CLI or Managed Identity
+
+3. Load core settings from App Configuration:
+   - Subscription ID, Resource Group, Service & Deployment Names
+
+4. Create or update RAI blocklist and items
+
+5. Create or update RAI policy and associate it with the deployment
+"""
+
 import os
 import sys
 import json
 import logging
 
-from azure.identity import (
-    AzureCliCredential,
-    ManagedIdentityCredential,
-    ChainedTokenCredential
-)
+from azure.identity import AzureCliCredential, ManagedIdentityCredential, ChainedTokenCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import (
@@ -27,25 +43,38 @@ for logger_name in (
 ):
     logging.getLogger(logger_name).setLevel(logging.WARNING)
 
-# ── Only need App Config endpoint from environment ──────────────────────────
-REQUIRED_ENV_VARS = [
-    "AZURE_APP_CONFIG_ENDPOINT"
-]
+# ── required env vars ───────────────────────────────────────────
+REQUIRED_ENV_VARS = ["AZURE_APP_CONFIG_ENDPOINT"]
 
 def check_env():
     missing = [v for v in REQUIRED_ENV_VARS if not os.getenv(v)]
     if missing:
-        logging.error("Missing environment variables:")
+        logging.error("❗️ Missing environment variables:")
         for name in missing:
             logging.error("  • %s", name)
         sys.exit(1)
 
+def cfg(client: AzureAppConfigurationClient, key: str, label= 'infra', required: bool = True) -> str:
+    """
+    Fetch a single value from App Configuration; exit if missing or empty.
+    """
+    try:
+        setting = client.get_configuration_setting(key=key, label=label)
+    except Exception as e:
+        logging.error("❗️ Could not fetch key '%s': %s", key, e)
+        if required:
+            sys.exit(1)
+        return ""
+    if required and (setting is None or not setting.value):
+        logging.error("❗️ Key '%s' not found or empty in App Configuration", key)
+        sys.exit(1)
+    return setting.value
 
 def load_and_replace(path: str, replacements: dict) -> dict:
     try:
         raw = open(path, "r", encoding="utf-8").read()
     except OSError as e:
-        logging.error("Unable to open %s: %s", path, e)
+        logging.error("❗️ Unable to open %s: %s", path, e)
         sys.exit(1)
 
     for ph, val in replacements.items():
@@ -54,14 +83,12 @@ def load_and_replace(path: str, replacements: dict) -> dict:
     try:
         return json.loads(raw)
     except json.JSONDecodeError as e:
-        logging.error("Failed to parse JSON in %s: %s", path, e)
+        logging.error("❗️ Failed to parse JSON in %s: %s", path, e)
         sys.exit(1)
-
 
 def main():
     check_env()
-
-    app_config_endpoint = os.environ["AZURE_APP_CONFIG_ENDPOINT"]
+    endpoint = os.environ["AZURE_APP_CONFIG_ENDPOINT"]
 
     # authenticate using CLI or Managed Identity
     cred = ChainedTokenCredential(
@@ -69,46 +96,56 @@ def main():
         ManagedIdentityCredential()
     )
 
-    # ── 1) Fetch PROVISION_CONFIG from App Configuration ──────────────────────
-    app_conf_client = AzureAppConfigurationClient(app_config_endpoint, cred)
+    # connect to App Configuration
+    app_conf = AzureAppConfigurationClient(endpoint, cred)
+
+    # ── 1) Read core settings ────────────────────────────────────────
+    subscription_id = cfg(app_conf, "AZURE_SUBSCRIPTION_ID")
+    resource_group  = cfg(app_conf, "AZURE_RESOURCE_GROUP")
+    account_name    = cfg(app_conf, "AZURE_AOAI_SERVICE_NAME")
+
+    logging.info("Loaded: SUBSCRIPTION_ID=%s, RESOURCE_GROUP=%s", subscription_id, resource_group)
+    logging.info("Loaded: SERVICE_NAME=%s", account_name)
+
+    # ── 2) Determine deployment name from list ───────────────────────
+    raw_list = cfg(app_conf, "AZURE_AOAI_DEPLOYMENT_LIST")
     try:
-        setting = app_conf_client.get_configuration_setting(key="PROVISION_CONFIG")
-        provision_config = json.loads(setting.value)
-    except Exception as e:
-        logging.error("Could not load/parse PROVISION_CONFIG from App Configuration: %s", e)
+        deployments = json.loads(raw_list)
+    except json.JSONDecodeError as e:
+        logging.error("AZURE_AOAI_DEPLOYMENT_LIST is not valid JSON: %s", e)
         sys.exit(1)
 
-    # ── 2) Extract core settings from PROVISION_CONFIG ───────────────────────
-    try:
-        subscription_id   = provision_config["AZURE_SUBSCRIPTION_ID"]
-        resource_group    = provision_config["AZURE_RESOURCE_GROUP"]
-        account_name      = provision_config["AZURE_OPENAI_SERVICE_NAME"]
-        deployment_name   = provision_config["AZURE_CHAT_DEPLOYMENT_NAME"]
-        logging.info(
-            "Loaded: SUBSCRIPTION_ID=%s, RESOURCE_GROUP=%s", subscription_id, resource_group
+    internal_key = "AZURE_CHAT_DEPLOYMENT_NAME"
+    deployment_name = None
+    for item in deployments:
+        if item.get("internal_name") == internal_key:
+            deployment_name = item.get("name")
+            break
+
+    if not deployment_name:
+        logging.error(
+            "No deployment with internal_name '%s' found in AZURE_AOAI_DEPLOYMENT_LIST",
+            internal_key
         )
-        logging.info(
-            "Loaded: SERVICE_NAME=%s, CHAT_DEPLOYMENT=%s", account_name, deployment_name
-        )
-    except KeyError as e:
-        logging.error("Missing key in PROVISION_CONFIG: %s", e)
         sys.exit(1)
 
-    # ── 3) Create Cognitive Services client ──────────────────────────────────
+    logging.info("Selected deployment: %s (internal_name=%s)", deployment_name, internal_key)
+
+    # ── 3) Create Cognitive Services client ─────────────────────────
     client = CognitiveServicesManagementClient(cred, subscription_id)
 
-    # names for resources
+    # names for RAI blocklist & policy
     blocklist_name = "gptragBlocklist"
     policy_name    = "gptragRAIPolicy"
 
-    # ── 4) Blocklist creation/update ─────────────────────────────────────────
+    # ── 4) Blocklist creation/update ────────────────────────────────
     bl_def = load_and_replace(
-        "scripts/rai/raiblocklist.json",
+        "config/aoai/raiblocklist.json",
         {"{{BlocklistName}}": blocklist_name}
     )
     bl_name = bl_def.get("name") or bl_def.get("blocklistname")
     if not bl_name:
-        logging.error("Blocklist JSON must have top-level 'name' or 'blocklistname'.")
+        logging.error("❗️ Blocklist JSON must have top-level 'name' or 'blocklistname'.")
         sys.exit(1)
 
     logging.info("Creating/updating blocklist %s …", bl_name)
@@ -154,9 +191,9 @@ def main():
             )
         )
 
-    # ── 5) RAI policy creation/update ─────────────────────────────────────────
+    # ── 4) RAI policy creation/update ────────────────────────────────
     pol_def = load_and_replace(
-        "scripts/rai/raipolicies.json",
+        "config/aoai/raipolicies.json",
         {
             "{{PolicyName}}": policy_name,
             "{{BlocklistName}}": bl_name
@@ -164,12 +201,12 @@ def main():
     )
     p_name = pol_def.get("name")
     if not p_name:
-        logging.error("Policy JSON must have top-level 'name'.")
+        logging.error("❗️ Policy JSON must have top-level 'name'.")
         sys.exit(1)
 
-    props      = pol_def["properties"]
-    prompt_bl  = props.pop("promptBlocklists", [])
-    comp_bl    = props.pop("completionBlocklists", [])
+    props     = pol_def["properties"]
+    prompt_bl = props.pop("promptBlocklists", [])
+    comp_bl   = props.pop("completionBlocklists", [])
     for x in prompt_bl: x["source"] = "Prompt"
     for x in comp_bl:   x["source"] = "Completion"
     props["customBlocklists"] = prompt_bl + comp_bl
@@ -192,7 +229,7 @@ def main():
         rai_policy={"properties": props}
     )
 
-    # ── 6) Associate policy to deployment ────────────────────────────────────
+    # ── 5) Associate policy to deployment ─────────────────────────────
     logging.info("Associating policy %s with deployment %s …", p_name, deployment_name)
     existing = client.deployments.get(resource_group, account_name, deployment_name)
     dep_dict = existing.as_dict()
@@ -205,8 +242,7 @@ def main():
         deployment=dep_dict
     ).result()
 
-    logging.info("✅ RAI blocklist, policy, and deployment association complete.")
-
+    logging.info("RAI blocklist, policy, and deployment association complete.")
 
 if __name__ == "__main__":
     main()
