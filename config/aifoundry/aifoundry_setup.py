@@ -21,6 +21,7 @@ from azure.ai.ml.entities import (
     ApiKeyConfiguration
 )
 from azure.mgmt.apimanagement import ApiManagementClient
+from azure.core.exceptions import HttpResponseError
 
 # ── Configure logging ─────────────────────────────────────────
 logging.basicConfig(
@@ -41,7 +42,7 @@ def check_env():
         sys.exit(1)
 
 
-def cfg(app_conf: AzureAppConfigurationClient, key: str, label= 'infra', required: bool = True) -> str:
+def cfg(app_conf: AzureAppConfigurationClient, key: str, label='infra', required: bool = True) -> str:
     """
     Fetch `key` from App Configuration; exit if missing or empty.
     """
@@ -100,22 +101,21 @@ def main():
     # core settings
     subscription_id  = cfg(app_conf, "AZURE_SUBSCRIPTION_ID")
     resource_group   = cfg(app_conf, "AZURE_RESOURCE_GROUP")
-    hub_name         = cfg(app_conf, "AZURE_AI_FOUNDRY_HUB_NAME")
+    project_name     = cfg(app_conf, "AZURE_AI_FOUNDRY_PROJECT_NAME")    
     aoai_api_ver     = cfg(app_conf, "AZURE_AOAI_API_VERSION")
-    aoai_dep_list    = cfg(app_conf, "AZURE_AOAI_DEPLOYMENT_LIST")
-    proj_conn_str    = cfg(app_conf, "AZURE_AI_FOUNDRY_PROJECT_CONNECTION_STRING")
 
     # instantiate MLClient to register connections
     ml_client = MLClient(
         credential=ChainedTokenCredential(AzureCliCredential(), ManagedIdentityCredential()),
         subscription_id=subscription_id,
         resource_group_name=resource_group,
-        workspace_name=hub_name,
+        workspace_name=project_name,
     )
 
-    # register resource connections
+    # load connection configurations
     with open("config/aifoundry/connections.json", "r") as f:
         conn_cfgs = json.load(f).get("connections", {})
+
     for key, cfg_item in conn_cfgs.items():
         name     = cfg_item["name"]
         category = cfg_item["category"]
@@ -124,17 +124,15 @@ def main():
 
         # prepare common fields
         target = interpolate(cfg_item.get("target", ""), app_conf)
-        api_path = interpolate(cfg_item.get("api_path", ""), app_conf) if cfg_item.get("api_path") else None
         raw_res = cfg_item.get("resource_id", "")
         res_id = resolve_resource_id(raw_res, app_conf) if raw_res else None
-        is_shared = cfg_item.get("is_shared", False)
 
-        # credentials if API key
+        # API key credentials if provided
         creds = None
         if cfg_item.get("api_key"):
             creds = ApiKeyConfiguration(key=interpolate(cfg_item["api_key"], app_conf))
 
-        # APIM handling
+        # APIM handling: override credentials and target endpoint
         if use_apim:
             apim_name = interpolate(cfg_item["apim_service_name"], app_conf)
             apim_sub  = interpolate(cfg_item["apim_subscription_display_name"], app_conf)
@@ -149,12 +147,10 @@ def main():
                 logging.error("❗️ APIM subscription '%s' not found; available: %s", apim_sub, [s.display_name for s in subs])
                 sys.exit(1)
             sec = apim.subscription.list_secrets(resource_group, apim_name, sub.name)
-            key = sec.primary_key
-            gateway = f"https://{apim_name}.azure-api.net/{api_path}"
-            creds = ApiKeyConfiguration(key=key)
-            target = gateway
+            creds = ApiKeyConfiguration(key=sec.primary_key)
+            target = f"https://{apim_name}.azure-api.net/"
 
-        # build and create connection entities
+        # build connection entity depending on category
         if category == "AzureOpenAI":
             ent = AzureOpenAIConnection(
                 name=name,
@@ -162,38 +158,51 @@ def main():
                 credentials=creds,
                 api_version=cfg_item.get("api_version", aoai_api_ver),
                 resource_id=res_id,
-                is_shared=is_shared
+                is_shared=cfg_item.get("is_shared", False)
             )
         elif category == "AIInference":
             if not creds:
                 logging.error("❗️ AIInference '%s' requires api_key or apim", name)
-                sys.exit(1)
+                continue
             ent = ServerlessConnection(name=name, endpoint=target, api_key=creds.key)
         elif category == "CognitiveServices":
             if not res_id:
                 logging.error("❗️ CognitiveServices '%s' requires resource_id", name)
-                sys.exit(1)
+                continue
             ent = AzureAIServicesConnection(
                 name=name,
                 endpoint=target,
                 credentials=creds,
                 ai_services_resource_id=res_id,
-                is_shared=is_shared
+                is_shared=cfg_item.get("is_shared", False)
             )
         elif category == "CognitiveSearch":
+            metadata = {
+                "type":                 "azure_ai_search",
+                "ApiType":              "Azure",
+                "ResourceId":           res_id,
+                "ApiVersion":           "2024-05-01-preview",
+                "DeploymentApiVersion": "2023-11-01",
+            }
             if creds:
-                ent = AzureAISearchConnection(name=name, endpoint=target, credentials=creds, is_shared=is_shared)
+                ent = AzureAISearchConnection(name=name, endpoint=target, credentials=creds, metadata=metadata, is_shared=cfg_item.get("is_shared", False))
             else:
-                if not res_id:
-                    logging.error("❗️ CognitiveSearch '%s' requires resource_id for AAD", name)
-                    sys.exit(1)
-                ent = AzureAISearchConnection(name=name, endpoint=res_id, is_shared=is_shared)
+                ent = AzureAISearchConnection(name=name, endpoint=target, metadata=metadata, is_shared=cfg_item.get("is_shared", False))
         else:
             logging.warning("Unknown category '%s'; skipping", category)
             continue
 
-        ml_client.connections.create_or_update(ent)
-        logging.info("✅ Registered '%s'", name)
+        # Create or update the connection, but never fail the whole loop
+        try:
+            ml_client.connections.create_or_update(ent)
+            logging.info("✅ Registered '%s'", name)
+        except HttpResponseError as e:
+            logging.warning(
+                "⚠️ Could not register '%s': %s. Skipping to next.",
+                name,
+                e.message or str(e)
+            )
+            continue
 
 
 if __name__ == "__main__":

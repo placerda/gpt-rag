@@ -4,10 +4,10 @@
       "name":      "openai-conn",
       "category":  "AzureOpenAI",
       "auth_type": "AAD",
-      "target":    "https://{AZURE_AOAI_SERVICE_NAME}.openai.azure.com",
+      "target":    "https://{AZURE_AOAI_SERVICE_NAME}.openai.azure.com/",
       "api_version": "{AZURE_AOAI_API_VERSION}",
       "resource_id":  "{AZURE_RESOURCE_IDS.AOAI_SERVICE}",
-      "is_shared": true
+      "is_shared": false
     },
 
     "openai-apim-conn": {
@@ -15,10 +15,9 @@
       "category":                       "AzureOpenAI",
       "use_apim":                       true,                              
       "apim_service_name":              "{AZURE_APIM_SERVICE_NAME}",        
-      "apim_subscription_display_name": "{AZURE_APIM_AOAI_SUBSCRIPTION_DISPLAY_NAME}",
-      "api_path":                       "{AZURE_APIM_AOAI_API_PATH}",        
+      "apim_subscription_display_name": "{AZURE_APIM_AOAI_SUBSCRIPTION_DISPLAY_NAME}",   
       "api_version":                    "{AZURE_AOAI_API_VERSION}",
-      "is_shared": true
+      "is_shared": false
     },
 
     "aiservices-conn": {
@@ -27,16 +26,16 @@
       "auth_type":    "AAD",
       "resource_id":  "{AZURE_RESOURCE_IDS.AI_SERVICES}",      
       "target":       "{AZURE_AI_SERVICES_ENDPOINT}",
-      "is_shared": true
+      "is_shared": false
     },
 
     "aisearch-conn": {
       "name":         "aisearch-conn",
       "category":     "CognitiveSearch",
       "auth_type":    "AAD",
-      "resource_id":  "{AZURE_RESOURCE_IDS.SEARCH_SERVICE}",        
-      "target":       "{AZURE_SEARCH_ENDPOINT}",
-      "is_shared": true
+      "resource_id":  "{AZURE_RESOURCE_IDS.SEARCH_SERVICE}",
+      "target":       "{AZURE_SEARCH_ENDPOINT}/",
+      "is_shared": false
     }
   }
 }

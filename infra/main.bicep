@@ -13,8 +13,8 @@ targetScope = 'resourceGroup'
 // ----------------------------------------------------------------------
 
 param environmentName                     string = ''  // AZD environment
-param location                            string = ''     // Primary deployment location.
-param principalId                         string = ''      // Principal ID for role assignments.
+param location                            string = ''  // Primary deployment location.
+param principalId                         string = ''  // Principal ID for role assignments.
 param deploymentTags                      object = {}  // Tags applied to all resources.
 param configureRbac                       string = ''  // Assign RBAC roles to resources.
 param networkIsolation                    string = '' 
@@ -25,7 +25,7 @@ param networkIsolation                    string = ''
 
 param installAiFoundry                  string = '' 
 param installApim                       string = ''  
-param installAoai                       string = ''  
+param installAoai                       string = ''   
 param installAppConfig                  string = ''
 param installKeyVault                   string = ''
 param installLogAnalytics               string = ''
@@ -92,6 +92,12 @@ param containerAppsList                   array = []
 param databaseContainersList             array = []
 
 // ----------------------------------------------------------------------
+// Doc Intelligence params
+// ----------------------------------------------------------------------
+
+param docIntelligenceApiVersion           string = ''
+
+// ----------------------------------------------------------------------
 // Azure Search params
 // ----------------------------------------------------------------------
 
@@ -115,7 +121,7 @@ var _resourceToken           = toLower(uniqueString(subscription().id, environme
 var _tags                    = union({ env: _environmentName }, deploymentTags)
 var _azureCloud              = environment().name
 var _environmentName         = empty(environmentName) ? 'dev' : environmentName
-var _location                = empty(location) ? 'eastus2' : location
+var _location                = empty(location) ? resourceGroup().location : location
 var _principalId             = empty(principalId) ? '' : principalId
 var _configureRbac           = (empty(configureRbac) || toLower(configureRbac) == 'true')
 var _networkIsolation        = empty(networkIsolation) ? false : (toLower(networkIsolation) == 'true')
@@ -145,20 +151,20 @@ var _storageAccountName           = empty(storageAccountName)           ? '${_ab
 // Modularity vars
 // ----------------------------------------------------------------------
 
-var _installAiFoundry         = empty(installAiFoundry)         ? true : (toLower(installAiFoundry)         == 'true')
-var _installApim              = empty(installApim)              ? true : (toLower(installApim)              == 'true')
-var _installAoai              = empty(installAoai)              ? true : (toLower(installAoai)              == 'true')
-var _installAppConfig         = empty(installAppConfig)         ? true : (toLower(installAppConfig)         == 'true')
-var _installKeyVault          = empty(installKeyVault)          ? true : (toLower(installKeyVault)          == 'true')
-var _installLogAnalytics      = empty(installLogAnalytics)      ? true : (toLower(installLogAnalytics)      == 'true')
-var _installAppInsights       = empty(installAppInsights)       ? true : (toLower(installAppInsights)       == 'true')
-var _installSearchService     = empty(installSearchService)     ? true : (toLower(installSearchService)     == 'true')
-var _installStorageAccount    = empty(installStorageAccount)    ? true : (toLower(installStorageAccount)    == 'true')
-var _installCosmosDb          = empty(installCosmosDb)          ? true : (toLower(installCosmosDb)          == 'true')
-var _installContainerApps     = empty(installContainerApps)     ? true : (toLower(installContainerApps)     == 'true')
-var _installContainerRegistry = empty(installContainerRegistry) ? true : (toLower(installContainerRegistry) == 'true')
-var _installAiServices        = empty(installAiServices)        ? true : (toLower(installAiServices)        == 'true')
-var _installContainerEnv      = empty(installContainerEnv)      ? true : (toLower(installContainerEnv)      == 'true')
+var _installAiFoundry            = empty(installAiFoundry)         ? true : (toLower(installAiFoundry)         == 'true')
+var _installApim                 = empty(installApim)              ? true : (toLower(installApim)              == 'true')
+var _installAoai                 = empty(installAoai)              ? true : (toLower(installAoai)              == 'true')
+var _installAppConfig            = empty(installAppConfig)         ? true : (toLower(installAppConfig)         == 'true')
+var _installKeyVault             = empty(installKeyVault)          ? true : (toLower(installKeyVault)          == 'true')
+var _installLogAnalytics         = empty(installLogAnalytics)      ? true : (toLower(installLogAnalytics)      == 'true')
+var _installAppInsights          = empty(installAppInsights)       ? true : (toLower(installAppInsights)       == 'true')
+var _installSearchService        = empty(installSearchService)     ? true : (toLower(installSearchService)     == 'true')
+var _installStorageAccount       = empty(installStorageAccount)    ? true : (toLower(installStorageAccount)    == 'true')
+var _installCosmosDb             = empty(installCosmosDb)          ? true : (toLower(installCosmosDb)          == 'true')
+var _installContainerApps        = empty(installContainerApps)     ? true : (toLower(installContainerApps)     == 'true')
+var _installContainerRegistry    = empty(installContainerRegistry) ? true : (toLower(installContainerRegistry) == 'true')
+var _installAiServices           = empty(installAiServices)        ? true : (toLower(installAiServices)        == 'true')
+var _installContainerEnv         = empty(installContainerEnv)      ? true : (toLower(installContainerEnv)      == 'true')
 
 // ----------------------------------------------------------------------
 // AI Hub and Project vars
@@ -178,9 +184,10 @@ var _aiFoundryProjectConnectionString = '${_aiFoundryProjectEndoint};${subscript
 // Azure Open AI Service vars
 // ----------------------------------------------------------------------
 
-var _aoaiApiVersion             = empty(aoaiApiVersion)        ? '2024-10-21'                     : aoaiApiVersion
-var _aoaiServiceId              = (_installAoai)               ? aoaiService.outputs.resourceId   : 'update-aoai-service-id'
-var _aoaiServiceEndpoint        = (_installAoai)               ? aoaiService.outputs.endpoint     : 'https://update-aoai-endpoint.example.com/'
+var _aoaiApiVersion             = empty(aoaiApiVersion)        ? '2024-10-21'                                     : aoaiApiVersion
+var _aoaiServiceId              = (_installAoai)               ? aoaiService.outputs.resourceId                   : 'update-aoai-service-id'
+var _aoaiServiceEndpoint        = (_installAoai)               ? aoaiService.outputs.endpoint                     : 'https://update-aoai-endpoint.example.com/'
+var _aoaiServicePrincipalId     = (_installAoai)               ? aoaiService.outputs.systemAssignedMIPrincipalId  : 'update-aoai-service-principal-id'
 
 // ----------------------------------------------------------------------
 // API Management vars
@@ -218,7 +225,8 @@ var _aoaiApiPolicyXml            = replace(_aoaiApiPolicyXmlTemplate, '__BACKEND
 var _aoaiApiName                 = empty(apimAoaiApiName)        ? 'openai' : apimAoaiApiName
 var _aoaiApiPath                 = empty(apimAoaiApiPath)        ? 'openai' : apimAoaiApiPath
 var _aoaiApiDisplayName          = empty(apimAoaiApiDisplayName) ? 'OpenAI' : apimAoaiApiDisplayName
-var _aoaiApiSpecUrl              = 'https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/stable/2024-02-01/inference.json'
+var _aoaiApiSpecUrlTemplate      = 'https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/stable/__API_VERSION__/inference.json'
+var _aoaiApiSpecUrl              = replace(_aoaiApiSpecUrlTemplate, '__API_VERSION__', _aoaiApiVersion)
 var _apimServicePrincipalId      = (_installApim) ? apimService.outputs.systemAssignedMIPrincipalId : 'update-apim-service-principal-id'
 
 // ----------------------------------------------------------------------
@@ -241,6 +249,7 @@ var _abbrs = {
   containerRegistries: 'cr'
   containerEnvs: 'ace'
   cognitiveServicesAccounts: 'ai-services'
+  docIntelligence: 'doc-intel'
   aiProject: 'ai-project'
   aiHub: 'ai-hub'
   apiManagementService: 'apim'
@@ -276,6 +285,11 @@ var _containerRegistryId          = (_installContainerRegistry) ? containerRegis
 // ----------------------------------------------------------------------
 
 var _databaseAccountId           = (_installCosmosDb)          ? databaseAccount.outputs.resourceId         : 'update-database-account-id'
+
+// ----------------------------------------------------------------------
+// Document Intelligence vars
+// ----------------------------------------------------------------------
+var _docIntelligenceApiVersion         = empty(docIntelligenceApiVersion) ? '2024-11-30' : docIntelligenceApiVersion
 
 // ----------------------------------------------------------------------
 // Key Vault vars
@@ -321,13 +335,20 @@ var _aiFoundryStorageAccountId   = (_installAiFoundry)         ? storageAccountA
 module aiServices 'br/public:avm/res/cognitive-services/account:0.10.2' = if (_installAiServices) {
   name: 'aiServicesModule'
   params: {
+    // kind:     'CognitiveServices'
     kind:     'AIServices'
     name:     _aiServicesName
     location: _location
+    managedIdentities: {
+      systemAssigned: true
+    }    
+    publicNetworkAccess : 'Enabled'
     sku:      'S0'
     tags:     _tags
+    customSubDomainName : _aiServicesName
   }
 }
+
 
 // AI Foundry
 //////////////////////////////////////////////////////////////////////////
@@ -345,7 +366,9 @@ module aiHub 'br/public:avm/res/machine-learning-services/workspace:0.12.0' = if
     associatedKeyVaultResourceId           : _keyVaultId
     associatedStorageAccountResourceId     : _storageAccountId
     associatedApplicationInsightsResourceId: _appInsightsId
-
+    managedIdentities: {
+      systemAssigned: true
+    }
     tags : _tags
   }
 }
@@ -365,6 +388,10 @@ module aiProject 'br/public:avm/res/machine-learning-services/workspace:0.9.1'  
     hubResourceId  : aiHub.outputs.resourceId
     discoveryUrl   : 'https://${aiHub.outputs.location}.api.azureml.ms/discovery'
 
+    managedIdentities: {
+      systemAssigned: true
+    }
+
     // optional extras
     tags       : _tags
   }
@@ -377,7 +404,7 @@ module appInsights 'br/public:avm/res/insights/component:0.6.0' = if (_installAp
   name: 'appInsightsModule'
   params: {
     name:                _appInsightsName
-    location:            _location
+    location:            _location    
     workspaceResourceId: logAnalytics.outputs.resourceId
     applicationType:     'web'
     kind:                'web'
@@ -394,7 +421,11 @@ module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.6.3'
   params: {
     name:     _appConfigName
     location: _location
+    managedIdentities: {
+      systemAssigned: true
+    }    
     sku:      'Standard'
+    publicNetworkAccess : 'Enabled'
     tags:     _tags
     dataPlaneProxy: {
       authenticationMode: 'Pass-through'
@@ -421,6 +452,11 @@ module aoaiService 'br/public:avm/res/cognitive-services/account:0.10.2' = if (_
     location: _location
     sku:      'S0'
     tags:     _tags
+    customSubDomainName   : _aoaiServiceName
+    publicNetworkAccess : 'Enabled'
+    managedIdentities: {
+      systemAssigned: true
+    }    
     deployments: [for deployment in aoaiDeploymentList: {
         name: deployment.name       
         model: {
@@ -455,7 +491,7 @@ module apimService 'br/public:avm/res/api-management/service:0.9.1' = if (_insta
       systemAssigned: true
     }
 
-    // 1) Your AOAI API
+    // 1) AOAI API
     apis: [
       {
         name:                        _aoaiApiName
@@ -465,7 +501,8 @@ module apimService 'br/public:avm/res/api-management/service:0.9.1' = if (_insta
         protocols:                   [ 'https' ]
         apiType:                     'http'
         format:                      'openapi-link'
-        serviceUrl:                  _aoaiApiSpecUrl
+        serviceUrl:                  _aoaiServiceEndpoint
+        value:                       _aoaiApiSpecUrl  
         subscriptionRequired:        true
         subscriptionKeyParameterNames: {
           header: 'api-key'
@@ -480,11 +517,12 @@ module apimService 'br/public:avm/res/api-management/service:0.9.1' = if (_insta
       }
     ]
 
-    // 2) Your backend pointing at OpenAI
+    // 2) backend pointing at OpenAI
     backends: [
       {
         name:        aoaiService.outputs.name
-        url:         '${_aoaiServiceEndpoint}openai'
+        url:         '${_aoaiServiceEndpoint}/openai'
+        // url:         '${_aoaiServiceEndpoint}openai'        
         protocol:    'http'
         description: 'backend description'
         circuitBreaker: {
@@ -531,6 +569,9 @@ module containerEnv 'br/public:avm/res/app/managed-environment:0.9.1' = if (_ins
     logAnalyticsWorkspaceResourceId: _logAnalyticsId
     appInsightsConnectionString: _appInsigthsConnectionString
     zoneRedundant: false
+    managedIdentities: {
+      systemAssigned: true
+    }    
   }
 }
 
@@ -539,9 +580,13 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.9.1' =
   name: 'containerRegistryModule'
   params: {
     name:     _containerRegistryName
+    publicNetworkAccess : 'Enabled'
     location: _location
     acrSku:   'Basic'
     tags:     _tags
+    managedIdentities: {
+      systemAssigned: true
+    }
   }
 }
 
@@ -573,6 +618,11 @@ module containerApp 'br/public:avm/res/app/container-app:0.16.0' = [for app in c
       systemAssigned: true
     }
 
+    scaleSettings: {
+      minReplicas: app.min_replicas
+      maxReplicas: app.max_replicas
+    }
+    
     containers: [
       {
         name:     app.service_name
@@ -604,6 +654,9 @@ module databaseAccount 'br/public:avm/res/document-db/database-account:0.12.0' =
   params: {
     name:                   _dbAccountName  
     location:               _location
+    managedIdentities: {
+      systemAssigned: true
+    }    
     locations: [
       {
         locationName:    _location  
@@ -615,6 +668,9 @@ module databaseAccount 'br/public:avm/res/document-db/database-account:0.12.0' =
     capabilitiesToAdd: [
       'EnableServerless'
     ]
+    networkRestrictions: {
+      publicNetworkAccess: 'Enabled'
+    }
     tags: _tags
     sqlDatabases: [
       {
@@ -640,9 +696,10 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.12.1' = if (_installKeyVaul
   params: {
     name:                  _keyVaultName
     location:              _location
+    publicNetworkAccess:   'Enabled'
     sku:                   'standard'
     enableRbacAuthorization: true
-    tags:                  _tags
+    tags:                  _tags    
   }
 }
 
@@ -657,6 +714,9 @@ module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.11.1' = 
     skuName:       'PerGB2018'  
     dataRetention: 30           
     tags:          _tags
+    managedIdentities: {
+      systemAssigned: true
+    }    
   }
 }
 
@@ -669,6 +729,7 @@ module searchService 'br/public:avm/res/search/search-service:0.10.0' =  if (_in
   params: {
     name: _searchServiceName
     location: _location
+    publicNetworkAccess:   'Enabled'
     // Tags
     tags: _tags
     // SKU & capacity
@@ -691,10 +752,16 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.19.0' = if (_
   params: {
     name:                     _storageAccountName
     location:                 _location
+    publicNetworkAccess:      'Enabled'
     skuName:                  'Standard_LRS'
     kind:                     'StorageV2'
     allowBlobPublicAccess:    false
     supportsHttpsTrafficOnly: true
+    networkAcls: {
+      bypass: 'AzureServices'
+      virtualNetworkRules: []  
+      defaultAction: 'Allow'  
+    }    
     tags:                     _tags
     blobServices: {
       automaticSnapshotPolicyEnabled: true
@@ -718,10 +785,16 @@ module storageAccountAIFoundry 'br/public:avm/res/storage/storage-account:0.19.0
   params: {
     name:                     _aiFoundryStorageAccountName
     location:                 _location
+    publicNetworkAccess:      'Enabled'    
     skuName:                  'Standard_LRS'
     kind:                     'StorageV2'
     allowBlobPublicAccess:    false
     supportsHttpsTrafficOnly: true
+    networkAcls: {
+      bypass: 'AzureServices'
+      virtualNetworkRules: []  
+      defaultAction: 'Allow'  
+    }        
     tags:                     _tags
   }
 }
@@ -806,6 +879,8 @@ output AZURE_RESOURCE_IDS object = {
   APP_CONFIG:                  _appConfigId
   DATABASE_ACCOUNT:            _databaseAccountId
   AOAI_SERVICE:                _aoaiServiceId
+  APPLICATION_INSIGHTS:        _appInsightsId
+  LOG_ANALYTICS:               _logAnalyticsId
 }
 
 output AZURE_PRINCIPAL_IDS object = {
@@ -814,6 +889,7 @@ output AZURE_PRINCIPAL_IDS object = {
   APIM:                        _apimServicePrincipalId
   AI_FOUNDRY_HUB:              _aiFoundryHubPrincipalId
   AI_FOUNDRY_PROJECT:          _aiFoundryProjectPrincipalId
+  AOAI_SERVICE:                _aoaiServicePrincipalId
 }
 
 // Container Apps Outputs
@@ -830,6 +906,13 @@ output AZURE_CONTAINER_APPS_LIST array = [
     fqdn: containerApp[i].outputs.fqdn
   }
 ]
+
+// AOAI Service Outputs
+//////////////////////////////////////////////////////////////////////////
+
+output AZURE_AOAI_API_VERSION     string = _aoaiApiVersion
+output AZURE_AOAI_DEPLOYMENT_LIST array = aoaiDeploymentList
+
 
 // API Management Outputs
 //////////////////////////////////////////////////////////////////////////
@@ -852,11 +935,10 @@ output AZURE_AI_SERVICES_ENDPOINT            string = _aiServicesEndpoint
 
 output AZURE_AI_FOUNDRY_PROJECT_CONNECTION_STRING  string = _aiFoundryProjectConnectionString
 
-// AOAI Service Outputs
+// Document Intelligence Outputs
 //////////////////////////////////////////////////////////////////////////
 
-output AZURE_AOAI_API_VERSION    string = _aoaiApiVersion
-output AZURE_AOAI_DEPLOYMENT_LIST array = aoaiDeploymentList
+output AZURE_DOC_INTELLIGENCE_API_VERSION string = _docIntelligenceApiVersion
 
 // Azure Container Outputs
 //////////////////////////////////////////////////////////////////////////

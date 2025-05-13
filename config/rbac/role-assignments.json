@@ -18,6 +18,11 @@
     "assignee": "{AZURE_CONTAINER_APPS_LIST.DATA_INGEST_CONTAINER_APP.principalId}",
     "resourceId": "{AZURE_RESOURCE_IDS.AI_SERVICES}",
     "roleDefinitionIdOrName": "Cognitive Services User"
+  },  
+  {
+    "assignee": "{AZURE_CONTAINER_APPS_LIST.DATA_INGEST_CONTAINER_APP.principalId}",
+    "resourceId": "{AZURE_RESOURCE_IDS.AI_SERVICES}",
+    "roleDefinitionIdOrName": "Cognitive Services User"
   },
   {
     "assignee": "{AZURE_CONTAINER_APPS_LIST.DATA_INGEST_CONTAINER_APP.principalId}",
@@ -110,6 +115,31 @@
     "roleDefinitionIdOrName": "4633458b-17de-408a-b874-0445c86b69e6"
   },
   {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_HUB}",
+    "resourceId": "{AZURE_RESOURCE_IDS.AI_SERVICES}",
+    "roleDefinitionIdOrName": "Cognitive Services OpenAI User"
+  },
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_HUB}",
+    "resourceId": "{AZURE_RESOURCE_IDS.SEARCH_SERVICE}",
+    "roleDefinitionIdOrName": "Search Index Data Reader"
+  },
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_HUB}",
+    "resourceId": "{AZURE_RESOURCE_IDS.AOAI_SERVICE}",
+    "roleDefinitionIdOrName": "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd"
+  },     
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_HUB}",
+    "resourceId": "{AZURE_RESOURCE_IDS.APPLICATION_INSIGHTS}",
+    "roleDefinitionIdOrName": "Application Insights Component Contributor"
+  },    
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_HUB}",
+    "resourceId": "{AZURE_RESOURCE_IDS.LOG_ANALYTICS}",
+    "roleDefinitionIdOrName": "Log Analytics Contributor"
+  },     
+  {
     "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_PROJECT}",
     "resourceId": "{AZURE_RESOURCE_IDS.AI_FOUNDRY_STORAGE_ACCOUNT}",
     "roleDefinitionIdOrName": "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
@@ -119,6 +149,46 @@
     "resourceId": "{AZURE_RESOURCE_IDS.KEY_VAULT}",
     "roleDefinitionIdOrName": "4633458b-17de-408a-b874-0445c86b69e6"
   },
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_PROJECT}",
+    "resourceId": "{AZURE_RESOURCE_IDS.AI_SERVICES}",
+    "roleDefinitionIdOrName": "Cognitive Services OpenAI User"
+  },   
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_PROJECT}",
+    "resourceId": "{AZURE_RESOURCE_IDS.SEARCH_SERVICE}",
+    "roleDefinitionIdOrName": "Search Index Data Reader"
+  },
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_PROJECT}",
+    "resourceId": "{AZURE_RESOURCE_IDS.AOAI_SERVICE}",
+    "roleDefinitionIdOrName": "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd"
+  },    
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_PROJECT}",
+    "resourceId": "{AZURE_RESOURCE_IDS.APPLICATION_INSIGHTS}",
+    "roleDefinitionIdOrName": "Application Insights Component Contributor"
+  },    
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AI_FOUNDRY_PROJECT}",
+    "resourceId": "{AZURE_RESOURCE_IDS.LOG_ANALYTICS}",
+    "roleDefinitionIdOrName": "Log Analytics Contributor"
+  },
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AOAI_SERVICE}",
+    "resourceId": "{AZURE_RESOURCE_IDS.SEARCH_SERVICE}",
+    "roleDefinitionIdOrName": "Search Index Data Reader"
+  },  
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AOAI_SERVICE}",
+    "resourceId": "{AZURE_RESOURCE_IDS.SEARCH_SERVICE}",
+    "roleDefinitionIdOrName": "Search Service Contributor"
+  },   
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.AOAI_SERVICE}",
+    "resourceId": "{AZURE_RESOURCE_IDS.STORAGE_ACCOUNT}",
+    "roleDefinitionIdOrName": "Storage Blob Data Contributor"
+  },      
   {
     "assignee": "{AZURE_PRINCIPAL_IDS.APIM}",
     "resourceId": "{AZURE_RESOURCE_IDS.AOAI_SERVICE}",
@@ -151,6 +221,11 @@
   },
   {
     "assignee": "{AZURE_PRINCIPAL_IDS.EXECUTOR_PRINCIPAL}",
+    "resourceId": "{AZURE_RESOURCE_IDS.AI_SERVICES}",
+    "roleDefinitionIdOrName": "Cognitive Services User"
+  },  
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.EXECUTOR_PRINCIPAL}",
     "resourceId": "{AZURE_RESOURCE_IDS.APP_CONFIG}",
     "roleDefinitionIdOrName": "App Configuration Data Owner"
   },
@@ -180,10 +255,15 @@
     "roleDefinitionIdOrName": "Search Service Contributor"
   },
   {
-    "assignee": "{AZURE_PRINCIPAL_IDS.SEARCH_SERVICE}",
-    "resourceId": "{AZURE_RESOURCE_IDS.AI_SERVICES}",
-    "roleDefinitionIdOrName": "Cognitive Services OpenAI User"
+    "assignee": "{AZURE_PRINCIPAL_IDS.EXECUTOR_PRINCIPAL}",
+    "resourceId": "{AZURE_RESOURCE_IDS.STORAGE_ACCOUNT}",
+    "roleDefinitionIdOrName": "Storage Blob Data Contributor"
   },
+  {
+    "assignee": "{AZURE_PRINCIPAL_IDS.SEARCH_SERVICE}",
+    "resourceId": "{AZURE_RESOURCE_IDS.AOAI_SERVICE}",
+    "roleDefinitionIdOrName": "Cognitive Services OpenAI Contributor"
+  },  
   {
     "assignee": "{AZURE_PRINCIPAL_IDS.SEARCH_SERVICE}",
     "resourceId": "{AZURE_RESOURCE_IDS.STORAGE_ACCOUNT}",
